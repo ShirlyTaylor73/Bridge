@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bridge · RPent 仓库理解原型</title>
+  <style>
+    :root{--bg:#f4f5f7;--panel:#fff;--line:#e6e8ec;--text:#20242c;--muted:#737985;--accent:#5564df;--core:#635bdf;--adapter:#0788a3;--data:#c67b19;--infra:#697586;--utility:#27966f;--test:#d65272;--docs:#8a68b0}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button,a{ -webkit-tap-highlight-color:transparent}button{color:inherit}a{color:inherit;text-decoration:none}button{cursor:pointer}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.muted{color:var(--muted)}
+    .topbar{height:68px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:16px}.brand{display:flex;align-items:center;gap:10px;padding-right:20px;border-right:1px solid var(--line)}.brand-mark{width:30px;height:30px;border-radius:9px;background:#202c4d;color:white;display:grid;place-items:center}.brand-name{font-size:16px;font-weight:750;letter-spacing:-.2px}.repo-title{display:flex;align-items:center;gap:9px}.repo-title h1{font-size:16px;margin:0;font-weight:680}.badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:11px;color:var(--muted);background:#fafafa}.prototype-badge{color:#70551b;background:#fff8e9;border-color:#eee1bd}.top-actions{margin-left:auto;display:flex;align-items:center;gap:14px}.open-repo{display:flex;align-items:center;gap:7px;color:#3949b9;font-weight:600}.icon{width:16px;height:16px;display:inline-block;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    .layout{height:calc(100vh - 68px);display:grid;grid-template-columns:224px minmax(560px,1fr) 292px;gap:1px;background:var(--line)}.sidebar,.inspector,.workspace{background:var(--panel);min-height:0}.sidebar{padding:22px 14px;overflow:auto}.eyebrow{font-size:11px;font-weight:700;color:#8a8f99;letter-spacing:.08em;text-transform:uppercase;margin:0 8px 10px}.view-list{display:flex;flex-direction:column;gap:5px}.view-button{width:100%;border:0;background:transparent;border-radius:8px;text-align:left;padding:11px 10px;display:flex;gap:10px;align-items:flex-start}.view-button:hover{background:#f6f6f8}.view-button.active{background:#eef0ff;color:#3949b9}.view-icon{width:28px;height:28px;border-radius:7px;background:#f0f1f3;display:grid;place-items:center;flex:none}.view-button.active .view-icon{background:#dde2ff}.view-name{font-weight:650;display:block}.view-desc{display:block;font-size:11px;color:var(--muted);margin-top:2px}.sidebar-section{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.legend{display:grid;gap:9px;margin:0 8px}.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#606672}.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}.sidebar-note{margin:20px 8px 0;font-size:11px;color:#9297a0;line-height:1.7}
+    .workspace{display:flex;flex-direction:column;overflow:hidden}.workspace-head{padding:18px 22px 14px;border-bottom:1px solid var(--line)}.workspace-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.workspace-title h2{font-size:15px;margin:0}.file-count{font-size:11px;color:var(--muted)}.distribution{height:4px;display:flex;border-radius:4px;overflow:hidden;margin:14px 0 12px;background:#eee}.distribution span{height:100%}.toolbar{display:flex;gap:8px;align-items:center}.search{height:32px;display:flex;align-items:center;gap:7px;background:#f5f6f7;border:1px solid #ebecef;border-radius:7px;padding:0 9px;flex:1;min-width:100px}.search input{border:0;outline:0;background:transparent;width:100%;color:var(--text);font-size:12px}.segmented{display:flex;border:1px solid var(--line);border-radius:7px;padding:2px;background:#fafafa}.segmented button{border:0;background:transparent;border-radius:5px;color:var(--muted);font-size:11px;padding:4px 8px}.segmented button.active{background:white;color:#3444b4;box-shadow:0 1px 3px #1c273318;font-weight:650}.tool-button{border:1px solid var(--line);background:white;border-radius:7px;width:31px;height:32px;display:grid;place-items:center}.tool-button:hover{background:#f7f7f9}.relation-status{display:flex;align-items:center;gap:8px;margin-top:12px;min-height:22px;font-size:11px;color:var(--muted)}.relation-status.active{color:#4654b9}.clear-relation{border:0;background:transparent;color:var(--muted);padding:0;margin-left:auto;font-size:11px}.tree-scroll{position:relative;overflow:auto;flex:1;padding:8px 12px 60px}.tree{position:relative;min-width:620px}.relation-layer{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:4}.dir{margin:0}.dir>summary{list-style:none;display:flex;align-items:center;min-height:38px;padding:5px 10px;border-radius:7px;cursor:pointer;position:relative}.dir>summary::-webkit-details-marker{display:none}.dir>summary:hover{background:#f7f7f9}.chevron{color:#9a9fa8;margin-right:5px;transition:transform .14s}.dir[open]>summary .chevron{transform:rotate(90deg)}.folder-icon{color:#8791a1;margin-right:7px}.dir-name{font-weight:620}.dir-summary{font-size:11px;color:var(--muted);margin-left:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dir-count{margin-left:auto;font-size:10px;color:#9a9fa8;padding-left:12px}.dir-children{margin-left:18px;border-left:1px solid #eceef1;padding-left:5px}.file-row{min-height:47px;display:flex;align-items:center;padding:5px 86px 5px 10px;border-radius:7px;position:relative;gap:7px;border-left:2px solid transparent}.file-row:hover{background:#f7f7f9}.file-row.selected{background:#f0f2ff;border-left-color:var(--accent)}.file-row.related{background:#f5f6fc}.file-row.root-related{box-shadow:inset 0 0 0 1px #aeb7ef}.file-dot{width:7px;height:7px;border-radius:2px;flex:none;margin:0 2px}.file-name{font-weight:570;white-space:nowrap}.entry-tag{font-size:9px;color:#3d4ebd;background:#eaedff;border-radius:4px;padding:1px 5px;font-weight:650}.file-summary{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:6px;flex:1}.row-actions{position:absolute;right:8px;display:flex;gap:4px;opacity:0;z-index:6}.file-row:hover .row-actions,.file-row.selected .row-actions{opacity:1}.row-action{width:27px;height:27px;border:0;border-radius:5px;background:#fff;box-shadow:0 0 0 1px #e2e4e9;display:grid;place-items:center;color:#68707d}.row-action:hover{color:#3949b9;box-shadow:0 0 0 1px #b9c0ec}.row-action.relation{color:#4c5dcc}.category-core{color:var(--core)}.category-adapter{color:var(--adapter)}.category-data{color:var(--data)}.category-infra{color:var(--infra)}.category-utility{color:var(--utility)}.category-test{color:var(--test)}.category-docs{color:var(--docs)}.bg-core{background:var(--core)}.bg-adapter{background:var(--adapter)}.bg-data{background:var(--data)}.bg-infra{background:var(--infra)}.bg-utility{background:var(--utility)}.bg-test{background:var(--test)}.bg-docs{background:var(--docs)}.empty{padding:40px;text-align:center;color:var(--muted)}
+    .inspector{padding:22px 20px;overflow:auto}.inspector-path{font-size:10px;color:var(--muted);word-break:break-all;background:#f6f7f8;border-radius:6px;padding:8px;margin:12px 0 16px}.inspector h2{font-size:19px;margin:0;letter-spacing:-.3px}.category-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 9px;margin-top:10px}.inspector-description{font-size:13px;line-height:1.8;color:#505661;margin:0 0 18px}.vscode-button{display:flex;align-items:center;justify-content:center;gap:8px;background:#26375f;color:white;border-radius:7px;padding:9px 12px;font-weight:600;margin-bottom:20px}.vscode-button:hover{background:#354a79}.inspector-section{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}.inspector-section h3{font-size:11px;margin:0 0 10px;color:#888e98;text-transform:uppercase;letter-spacing:.06em}.detail-list{margin:0;display:grid;grid-template-columns:70px 1fr;gap:8px;font-size:12px}.detail-list dt{color:var(--muted)}.detail-list dd{margin:0}.relation-list{display:grid;gap:7px}.relation-item{border:1px solid var(--line);border-radius:7px;padding:8px;cursor:pointer}.relation-item:hover{border-color:#b9c0ec;background:#fafaff}.relation-kind{font-size:10px;color:#5564df}.relation-target{font-size:11px;margin-top:3px;word-break:break-all}.hint-box{background:#f6f7fb;border-radius:8px;padding:12px;color:#6f7582;font-size:12px;line-height:1.7}.footer-note{font-size:10px;color:#969ba4;margin-top:22px;line-height:1.6}
+    @media(max-width:1100px){.layout{grid-template-columns:190px minmax(520px,1fr)}.inspector{display:none}.file-summary{max-width:220px}}@media(max-width:760px){.topbar{padding:0 14px}.brand{padding-right:10px}.brand-name,.top-actions .badge{display:none}.layout{display:block;height:auto}.sidebar{display:none}.workspace{height:calc(100vh - 68px)}.workspace-head{padding:14px}.toolbar{flex-wrap:wrap}.search{flex-basis:100%}.tree{min-width:580px}.repo-title .badge{display:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="?view=base" aria-label="Bridge 基础文件树"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24"><path d="M4 18h16M6 18V9m12 9V9M3 9h18M6 9a6 6 0 0 1 12 0"/></svg></span><span class="brand-name">Bridge</span></a>
+    <div class="repo-title"><h1>RPent</h1><span class="badge mono">d903f38</span><span class="badge prototype-badge">界面原型</span></div>
+    <div class="top-actions"><span class="badge">492 个仓库文件</span><a class="open-repo" data-open-path="" href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>在 VS Code 打开仓库</a></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <p class="eyebrow">学习视角</p>
+      <nav class="view-list" id="view-list"></nav>
+      <div class="sidebar-section"><p class="eyebrow">文件分类</p><div class="legend" id="legend"></div></div>
+      <p class="sidebar-note">颜色表示功能分类，入口与当前选中状态单独标记。目录统计仅计算原型已收录节点。</p>
+    </aside>
+    <main class="workspace">
+      <div class="workspace-head">
+        <div class="workspace-title"><h2 id="workspace-title">仓库文件树</h2><span class="file-count" id="file-count"></span></div>
+        <div class="distribution" id="distribution" aria-label="已收录文件分类分布"></div>
+        <div class="toolbar">
+          <label class="search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="search" placeholder="搜索文件、路径或功能…"></label>
+          <div class="segmented" id="direction"><button data-value="out" class="active">出向</button><button data-value="in">入向</button><button data-value="both">双向</button></div>
+          <div class="segmented" id="depth"><button data-value="1" class="active">1 层</button><button data-value="2">2 层</button></div>
+          <button class="tool-button" id="expand" title="展开已收录目录"><svg class="icon" viewBox="0 0 24 24"><path d="m7 9 5 5 5-5"/></svg></button>
+        </div>
+        <div class="relation-status" id="relation-status"><span>选择学习视角，或点击文件的关系按钮，按需显示调用线。</span></div>
+      </div>
+      <div class="tree-scroll" id="tree-scroll"><div class="tree" id="tree"><svg class="relation-layer" id="relation-layer"></svg><div id="tree-content"></div></div></div>
+    </main>
+    <aside class="inspector" id="inspector"></aside>
+  </div>
+  <script>
+    const REPO_ROOT = '/Users/heavysword/WorkSpace/School/RPent';
+    const CATEGORIES = {core:'核心业务',adapter:'接口适配',data:'数据模型',infra:'基础设施',utility:'通用工具',test:'测试',docs:'文档'};
+    const ICONS = {file:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',folder:'<svg class="icon folder-icon" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',chevron:'<svg class="icon chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',external:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',relation:'<svg class="icon" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v4c0 2 2 3 4 3h4c2 0 4 1 4 3"/></svg>',tree:'<svg class="icon" viewBox="0 0 24 24"><path d="M12 3v5m0 0H6v5m6-5h6v5M6 13v5m12-5v5"/><circle cx="12" cy="3" r="1"/><circle cx="6" cy="19" r="1"/><circle cx="18" cy="19" r="1"/></svg>',play:'<svg class="icon" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></svg>',dashboard:'<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>'};
+    const nodes = [
+      {id:'rpent',name:'rpent',path:'rpent',kind:'dir',summary:'Python 主包：规划、执行、机器人与交互',open:true,children:[
+        {id:'cli',name:'cli',path:'rpent/cli',kind:'dir',summary:'命令行入口与终端交互',repoCount:6,open:true,children:[
+          {id:'cli-main',name:'main.py',path:'rpent/cli/main.py',kind:'file',category:'core',entry:'主入口',summary:'解析任务参数，初始化运行时、记忆和 Planner'},
+          {id:'cli-dashboard',name:'dashboard.py',path:'rpent/cli/dashboard.py',kind:'file',category:'core',entry:'会话入口',summary:'创建 Dashboard 会话、共享运行时和 HTTP 服务'},
+          {id:'cli-tui',name:'tui.py',path:'rpent/cli/tui.py',kind:'file',category:'adapter',summary:'终端提示、交互输入与实时引导'},
+          {id:'cli-memory',name:'memory.py',path:'rpent/cli/memory.py',kind:'file',category:'adapter',entry:'独立入口',summary:'rpent-memory 记忆管理命令入口'},
+          {id:'cli-check',name:'check_llm.py',path:'rpent/cli/check_llm.py',kind:'file',category:'infra',entry:'检查入口',summary:'检查模型服务与规划器配置'}
+        ]},
+        {id:'planner',name:'planner',path:'rpent/planner',kind:'dir',summary:'规划器接口、执行循环与模型适配',repoCount:9,children:[
+          {id:'planner-base',name:'base.py',path:'rpent/planner/base.py',kind:'file',category:'adapter',summary:'定义 Planner 契约、后端工厂与工具执行 helper'},
+          {id:'planner-api',name:'api_loop.py',path:'rpent/planner/api_loop.py',kind:'file',category:'adapter',entry:'API 入口',summary:'将 pydantic-ai 多轮工具调用桥接到 RPent Toolkit'},
+          {id:'planner-claude',name:'claude_code.py',path:'rpent/planner/claude_code.py',kind:'file',category:'adapter',summary:'Claude Code 规划器适配'},
+          {id:'planner-codex',name:'codex.py',path:'rpent/planner/codex.py',kind:'file',category:'adapter',summary:'Codex 规划器适配'}
+        ]},
+        {id:'session',name:'session',path:'rpent/session',kind:'dir',summary:'执行会话公共契约',repoCount:2,children:[{id:'session-base',name:'base.py',path:'rpent/session/base.py',kind:'file',category:'core',summary:'定义执行会话与状态流转接口'}]},
+        {id:'robots-core',name:'robots',path:'rpent/robots',kind:'dir',summary:'机器人发现、描述与共享运行时',repoCount:20,children:[
+          {id:'robots-base',name:'base.py',path:'rpent/robots/base.py',kind:'file',category:'adapter',summary:'动态加载机器人并提供 RobotSpec 与 Toolkit 工厂'},
+          {id:'robots-runtime',name:'runtime.py',path:'rpent/robots/runtime.py',kind:'file',category:'core',summary:'协调环境、模型服务及机器人运行组件'}
+        ]},
+        {id:'tools',name:'tools',path:'rpent/tools',kind:'dir',summary:'工具契约、调度与观察结果',repoCount:6,children:[{id:'tools-toolkit',name:'toolkit.py',path:'rpent/tools/toolkit.py',kind:'file',category:'core',summary:'注册、校验和调度工具，并采集环境状态'}]},
+        {id:'memory',name:'memory',path:'rpent/memory',kind:'dir',summary:'记忆加载、来源与管理',repoCount:5,children:[{id:'memory-manager',name:'manager.py',path:'rpent/memory/manager.py',kind:'file',category:'data',summary:'管理任务记忆与全局记忆的访问'}]},
+        {id:'dashboard',name:'dashboard',path:'rpent/dashboard',kind:'dir',summary:'实时监控服务与交互状态',repoCount:15,children:[
+          {id:'dashboard-server',name:'server.py',path:'rpent/dashboard/server.py',kind:'file',category:'adapter',entry:'HTTP 入口',summary:'提供页面、配置、消息、状态、媒体和 SSE 接口'},
+          {id:'dashboard-session',name:'session.py',path:'rpent/dashboard/session.py',kind:'file',category:'core',summary:'顺序领取并执行任务，写回成功、失败或取消状态'},
+          {id:'dashboard-state',name:'state.py',path:'rpent/dashboard/state.py',kind:'file',category:'core',summary:'维护线程安全投影、任务命令和待执行任务'},
+          {id:'dashboard-js',name:'dashboard.js',path:'rpent/dashboard/static/dashboard.js',kind:'file',category:'core',entry:'前端入口',summary:'加载会话配置、建立 SSE 并渲染运行状态'},
+          {id:'dashboard-interaction',name:'interaction.js',path:'rpent/dashboard/static/interaction.js',kind:'file',category:'adapter',summary:'将任务、消息、撤回和中断操作发送到 HTTP API'}
+        ]},
+        {id:'evaluation',name:'evaluation',path:'rpent/evaluation',kind:'dir',summary:'运行结果与评测产物',repoCount:2,children:[{id:'evaluation-result',name:'result.py',path:'rpent/evaluation/result.py',kind:'file',category:'data',summary:'记录运行结果与收尾上下文'}]},
+        {id:'prompt',name:'prompt',path:'rpent/prompt',kind:'dir',summary:'规划器共享提示构建',children:[{id:'prompt-common',name:'common.py',path:'rpent/prompt/common.py',kind:'file',category:'core',summary:'组装规划所需公共提示内容'}]},
+        {id:'utils',name:'utils',path:'rpent/utils',kind:'dir',summary:'配置、日志、RPC 与序列化',children:[{id:'utils-config',name:'config.py',path:'rpent/utils/config.py',kind:'file',category:'utility',summary:'读取与规范化运行配置'}]},
+        {id:'flywheel',name:'flywheel',path:'rpent/flywheel',kind:'dir',summary:'经验数据与持续演化工具',repoCount:4,children:[{id:'flywheel-cli',name:'cli.py',path:'rpent/flywheel/cli.py',kind:'file',category:'core',entry:'独立入口',summary:'rpent-flywheel 命令入口'}]}
+      ]},
+      {id:'robots',name:'robots',path:'robots',kind:'dir',summary:'LIBERO、Franka、RoboCasa 等具体集成',repoCount:147,children:[
+        {id:'robot-libero',name:'libero',path:'robots/libero',kind:'dir',summary:'LIBERO 仿真环境集成',children:[]},
+        {id:'robot-franka',name:'franka',path:'robots/franka',kind:'dir',summary:'Franka 真实机器人集成',children:[]},
+        {id:'robot-robocasa',name:'robocasa',path:'robots/robocasa',kind:'dir',summary:'RoboCasa 仿真环境集成',children:[]},
+        {id:'robot-yam',name:'yam',path:'robots/yam',kind:'dir',summary:'YAM 机器人集成',children:[]}
+      ]},
+      {id:'tests',name:'tests',path:'tests',kind:'dir',summary:'离线单元测试与集成检查',repoCount:109,children:[{id:'tests-cli',name:'test_main_contracts.py',path:'tests/unit_tests/rpent/cli/test_main_contracts.py',kind:'file',category:'test',summary:'验证 CLI 主入口契约'}]},
+      {id:'docs',name:'docs',path:'docs',kind:'dir',summary:'中英文用户与开发文档',repoCount:115,children:[{id:'docs-readme',name:'README.md',path:'docs/README.md',kind:'file',category:'docs',summary:'文档站点与内容导航'}]},
+      {id:'calibration',name:'calibration_tools',path:'calibration_tools',kind:'dir',summary:'机器人标定与采集工具',repoCount:10,children:[]},
+      {id:'pyproject',name:'pyproject.toml',path:'pyproject.toml',kind:'file',category:'infra',summary:'依赖、功能扩展与四个命令入口配置'},
+      {id:'readme',name:'README.zh-CN.md',path:'README.zh-CN.md',kind:'file',category:'docs',summary:'项目定位、安装与快速运行指南'}
+    ];
+    const relations = [
+      {key:'main-robots',source:'cli-main',target:'robots-base',kind:'calls',line:359,note:'get_robot_spec() 与 get_toolkit()'},
+      {key:'main-planner',source:'cli-main',target:'planner-base',kind:'calls',line:467,note:'build_planner()，随后调用 planner.solve()'},
+      {key:'planner-api',source:'planner-base',target:'planner-api',kind:'calls',line:241,note:'延迟 import 并实例化 ApiAgentLoop'},
+      {key:'api-tools',source:'planner-api',target:'tools-toolkit',kind:'calls',line:313,note:'toolkit.list_tools() 生成模型工具声明'},
+      {key:'api-base',source:'planner-api',target:'planner-base',kind:'calls',line:394,note:'通过 execute_tool() 执行模型工具调用'},
+      {key:'base-tools',source:'planner-base',target:'tools-toolkit',kind:'calls',line:83,note:'toolkit.execute_tool() 在线程中执行'},
+      {key:'main-tools',source:'cli-main',target:'tools-toolkit',kind:'calls',line:648,note:'任务结束后调用 toolkit.close()'},
+      {key:'main-tui',source:'cli-main',target:'cli-tui',kind:'calls',line:47,note:'启动终端输入与交互读取'},
+      {key:'main-dashboard',source:'cli-main',target:'cli-dashboard',kind:'calls',line:443,note:'run_dashboard_session()'},
+      {key:'dashboard-state',source:'cli-dashboard',target:'dashboard-state',kind:'calls',line:118,note:'构造 DashboardState'},
+      {key:'dashboard-server',source:'cli-dashboard',target:'dashboard-server',kind:'calls',line:122,note:'构造并启动 DashboardServer'},
+      {key:'dashboard-session',source:'cli-dashboard',target:'dashboard-session',kind:'calls',line:153,note:'构造并运行会话控制器'},
+      {key:'js-interaction',source:'dashboard-js',target:'dashboard-interaction',kind:'calls',line:847,note:'createInteractionController()'},
+      {key:'js-server',source:'dashboard-js',target:'dashboard-server',kind:'http',line:1333,note:'加载配置、命令并建立 EventSource'},
+      {key:'interaction-server',source:'dashboard-interaction',target:'dashboard-server',kind:'http',line:383,note:'POST /api/session/messages'},
+      {key:'server-state',source:'dashboard-server',target:'dashboard-state',kind:'calls',line:185,note:'消息路由调用 state.submit_input()'},
+      {key:'session-state',source:'dashboard-session',target:'dashboard-state',kind:'calls',line:63,note:'wait_for_task() 与 complete_task()'},
+      {key:'session-dashboard',source:'dashboard-session',target:'cli-dashboard',kind:'calls',line:67,note:'通过注入回调执行 Dashboard TaskRun'},
+      {key:'dashboard-planner',source:'cli-dashboard',target:'planner-base',kind:'calls',line:311,note:'构造 Planner 并调用 planner.solve()'}
+    ];
+    const views = [
+      {id:'base',name:'基础文件树',desc:'目录、分类与入口',icon:'tree',roots:[],edges:[]},
+      {id:'cli',name:'CLI 任务执行',desc:'从命令入口理解主链路',icon:'play',roots:['cli-main'],edges:['main-robots','main-planner','planner-api','api-tools','api-base','base-tools','main-tools']},
+      {id:'dashboard',name:'Dashboard 实时监控',desc:'从服务入口理解交互',icon:'dashboard',roots:['cli-main'],edges:['main-dashboard','dashboard-state','dashboard-server','dashboard-session','js-interaction','js-server','interaction-server','server-state','session-state','session-dashboard','dashboard-planner']}
+    ];
+    const state = {view:'base',selected:'cli-main',relationRoot:null,direction:'out',depth:1,search:'',expand:false};
+    const nodeMap = new Map();
+    function walk(items,parent=null){for(const node of items){nodeMap.set(node.id,{...node,parent});if(node.children)walk(node.children,node.id)}}walk(nodes);
+    const byId=id=>nodeMap.get(id);
+    const files=[...nodeMap.values()].filter(n=>n.kind==='file');
+    const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const vscodeLink=path=>'vscode://file'+[REPO_ROOT,path].filter(Boolean).join('/').split('/').map(encodeURIComponent).join('/');
+    document.querySelectorAll('[data-open-path]').forEach(a=>{a.href=vscodeLink(a.dataset.openPath)});
+    function descendants(node){const result=[];for(const child of node.children||[]){if(child.kind==='file')result.push(child);else result.push(...descendants(child))}return result}
+    function categoryCounts(){const counts={};for(const file of files)counts[file.category]=(counts[file.category]||0)+1;return counts}
+    function renderShell(){
+      document.getElementById('view-list').innerHTML=views.map(v=>`<button class="view-button ${state.view===v.id?'active':''}" data-view="${v.id}"><span class="view-icon">${ICONS[v.icon]}</span><span><span class="view-name">${v.name}</span><span class="view-desc">${v.desc}</span></span></button>`).join('')+(state.view==='custom'?`<button class="view-button active"><span class="view-icon">${ICONS.relation}</span><span><span class="view-name">节点关系</span><span class="view-desc">${esc(byId(state.relationRoot)?.name)}</span></span></button>`:'');
+      document.getElementById('legend').innerHTML=Object.entries(CATEGORIES).map(([id,name])=>`<div class="legend-item"><span class="dot bg-${id}"></span>${name}</div>`).join('');
+      const counts=categoryCounts(),total=files.length;document.getElementById('distribution').innerHTML=Object.entries(counts).map(([id,count])=>`<span class="bg-${id}" style="width:${count/total*100}%" title="${CATEGORIES[id]} ${count}"></span>`).join('');
+      document.getElementById('file-count').textContent=`原型收录 ${total} 个文件 / ${nodeMap.size-total} 个目录`;
+      document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>selectView(button.dataset.view)));
+    }
+    function matches(node){if(!state.search)return true;const text=`${node.name} ${node.path} ${node.summary||''}`.toLowerCase();return text.includes(state.search.toLowerCase())}
+    function hasMatch(node){return matches(node)||(node.children||[]).some(hasMatch)}
+    function activeRelationData(){
+      if(state.view==='base')return{edges:[],roots:[]};
+      const view=views.find(v=>v.id===state.view),roots=state.view==='custom'?[state.relationRoot]:view.roots;
+      const pool=state.view==='custom'?relations:view.edges.map(key=>relations.find(edge=>edge.key===key)).filter(Boolean);
+      const visited=new Set(roots),queue=roots.map(id=>({id,level:0}));
+      while(queue.length){const{id,level}=queue.shift();if(level>=state.depth)continue;for(const edge of pool){let next=null;if((state.direction==='out'||state.direction==='both')&&edge.source===id)next=edge.target;if((state.direction==='in'||state.direction==='both')&&edge.target===id)next=edge.source;if(next&&!visited.has(next)&&byId(next)){visited.add(next);queue.push({id:next,level:level+1})}}}
+      return{edges:pool.filter(e=>visited.has(e.source)&&visited.has(e.target)),roots};
+    }
+    function renderTree(){
+      const active=activeRelationData(),related=new Set(active.edges.flatMap(e=>[e.source,e.target]));
+      function renderNode(node){
+        if(!hasMatch(node))return'';
+        if(node.kind==='dir'){
+          const children=(node.children||[]).map(renderNode).join(''),open=state.expand||state.search||node.open||active.edges.some(e=>[e.source,e.target].some(id=>{let p=byId(id)?.parent;while(p){if(p===node.id)return true;p=byId(p)?.parent}return false}));
+          return`<details class="dir" data-dir="${node.id}" ${open?'open':''}><summary>${ICONS.chevron}${ICONS.folder}<span class="dir-name">${esc(node.name)}</span><span class="dir-summary">${esc(node.summary)}</span>${node.repoCount?`<span class="dir-count">${node.repoCount} 文件</span>`:''}</summary><div class="dir-children">${children}</div></details>`;
+        }
+        return`<div class="file-row ${state.selected===node.id?'selected':''} ${related.has(node.id)?'related':''} ${active.roots.includes(node.id)?'root-related':''}" data-node="${node.id}" data-category="${node.category}"><span class="file-dot bg-${node.category}"></span><span class="file-name">${esc(node.name)}</span>${node.entry?`<span class="entry-tag">${esc(node.entry)}</span>`:''}<span class="file-summary">${esc(node.summary)}</span><div class="row-actions"><button class="row-action relation" data-relation="${node.id}" title="查看此文件的调用关系">${ICONS.relation}</button><a class="row-action" href="${vscodeLink(node.path)}" title="在 VS Code 中打开">${ICONS.external}</a></div></div>`;
+      }
+      document.getElementById('tree-content').innerHTML=nodes.map(renderNode).join('')||'<div class="empty">没有匹配的文件</div>';
+      document.querySelectorAll('[data-node]').forEach(row=>row.addEventListener('click',()=>{state.selected=row.dataset.node;render()}));
+      document.querySelectorAll('[data-relation]').forEach(button=>button.addEventListener('click',event=>{event.stopPropagation();state.selected=button.dataset.relation;state.relationRoot=button.dataset.relation;state.view='custom';render()}));
+      document.querySelectorAll('.row-action[href]').forEach(link=>link.addEventListener('click',event=>event.stopPropagation()));
+      document.querySelectorAll('details').forEach(details=>details.addEventListener('toggle',scheduleLines));
+      updateStatus(active);scheduleLines();
+    }
+    function updateStatus(active){
+      const status=document.getElementById('relation-status');status.classList.toggle('active',active.edges.length>0);
+      if(!active.edges.length){status.innerHTML='<span>选择学习视角，或点击文件的关系按钮，按需显示调用线。</span>';return}
+      const name=state.view==='custom'?`从 ${byId(state.relationRoot).name} 查看关系`:views.find(v=>v.id===state.view).name;
+      status.innerHTML=`<span>${ICONS.relation} ${esc(name)} · 当前显示 ${active.edges.length} 条关系 · ${state.depth} 层</span><button class="clear-relation" id="clear-relation">清除连线</button>`;
+      document.getElementById('clear-relation').addEventListener('click',()=>{state.view='base';state.relationRoot=null;render()});
+    }
+    function renderInspector(){
+      const node=byId(state.selected)||byId('cli-main'),isDir=node.kind==='dir',related=relations.filter(e=>e.source===node.id||e.target===node.id);
+      document.getElementById('inspector').innerHTML=`<p class="eyebrow">${isDir?'目录概览':'当前文件'}</p><h2>${esc(node.name)}</h2>${!isDir?`<span class="category-pill category-${node.category}"><span class="dot bg-${node.category}"></span>${CATEGORIES[node.category]}</span>`:''}<div class="inspector-path mono">${esc(node.path)}</div><p class="inspector-description">${esc(node.summary)}</p>${!isDir?`<a class="vscode-button" href="${vscodeLink(node.path)}">${ICONS.external}在 VS Code 中打开</a>`:''}<section class="inspector-section"><h3>节点信息</h3><dl class="detail-list"><dt>类型</dt><dd>${isDir?'目录':'文件'}</dd>${node.entry?`<dt>入口</dt><dd>${esc(node.entry)}</dd>`:''}${node.repoCount?`<dt>仓库规模</dt><dd>${node.repoCount} 个文件</dd>`:''}${!isDir?`<dt>已核实关系</dt><dd>${related.length} 条</dd>`:''}</dl></section>${related.length?`<section class="inspector-section"><h3>直接调用与依赖</h3><div class="relation-list">${related.map(e=>{const outgoing=e.source===node.id,target=byId(outgoing?e.target:e.source);return`<div class="relation-item" data-inspect="${target.id}"><span class="relation-kind">${outgoing?'调用/依赖 →':'← 被引用'} · ${esc(e.kind)}</span><div class="relation-target mono">${esc(target.path)}</div></div>`}).join('')}</div></section>`:''}<p class="footer-note">原型仅展示已核实的关键文件与关系，不代表完整仓库调用图。点击文件名查看说明，使用独立按钮探索关系或打开 VS Code。</p>`;
+      document.querySelectorAll('[data-inspect]').forEach(item=>item.addEventListener('click',()=>{state.selected=item.dataset.inspect;render()}));
+    }
+    let lineFrame=null;
+    function scheduleLines(){if(lineFrame)cancelAnimationFrame(lineFrame);lineFrame=requestAnimationFrame(drawLines)}
+    function drawLines(){
+      const svg=document.getElementById('relation-layer'),tree=document.getElementById('tree');svg.innerHTML='';
+      const active=activeRelationData(),treeRect=tree.getBoundingClientRect(),width=tree.clientWidth,height=tree.clientHeight;svg.setAttribute('width',width);svg.setAttribute('height',height);svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');defs.innerHTML='<marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#7180dc"/></marker>';svg.appendChild(defs);
+      const hidden=element=>{for(let parent=element.parentElement;parent;parent=parent.parentElement){if(parent.tagName==='DETAILS'&&!parent.open)return true}return false};
+      for(const edge of active.edges){
+        const source=document.querySelector(`[data-node="${edge.source}"]`),target=document.querySelector(`[data-node="${edge.target}"]`);if(!source||!target||hidden(source)||hidden(target))continue;
+        const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
+        const x=Math.min(width-26,Math.max(a.right,b.right)-treeRect.left-74),y1=a.top+a.height/2-treeRect.top,y2=b.top+b.height/2-treeRect.top,bend=Math.min(54,Math.max(24,Math.abs(y2-y1)*.12));
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',`M ${x} ${y1} C ${x+bend} ${y1}, ${x+bend} ${y2}, ${x} ${y2}`);path.setAttribute('fill','none');path.setAttribute('stroke',edge.kind==='calls'?'#6676dc':'#a1a8b6');path.setAttribute('stroke-width',edge.kind==='calls'?'1.6':'1.2');path.setAttribute('stroke-dasharray',edge.kind==='calls'?'none':'4 4');path.setAttribute('marker-end','url(#arrow)');path.setAttribute('opacity','.86');svg.appendChild(path);
+      }
+    }
+    function render(){renderShell();renderTree();renderInspector();document.getElementById('workspace-title').textContent=state.view==='base'?'仓库文件树':state.view==='custom'?'节点局部关系':views.find(v=>v.id===state.view).name}
+    function selectView(id){state.view=id;state.relationRoot=null;const view=views.find(v=>v.id===id);if(view.roots.length){state.selected=view.roots[0];state.depth=2;document.querySelectorAll('#depth button').forEach(b=>b.classList.toggle('active',b.dataset.value==='2'))}render()}
+    document.getElementById('search').addEventListener('input',event=>{state.search=event.target.value.trim();renderTree()});
+    document.getElementById('expand').addEventListener('click',()=>{state.expand=!state.expand;renderTree()});
+    document.getElementById('direction').addEventListener('click',event=>{if(event.target.dataset.value){state.direction=event.target.dataset.value;document.querySelectorAll('#direction button').forEach(b=>b.classList.toggle('active',b===event.target));renderTree()}});
+    document.getElementById('depth').addEventListener('click',event=>{if(event.target.dataset.value){state.depth=Number(event.target.dataset.value);document.querySelectorAll('#depth button').forEach(b=>b.classList.toggle('active',b===event.target));renderTree()}});
+    window.addEventListener('resize',scheduleLines);
+    const requested=new URLSearchParams(location.search).get('view');if(views.some(v=>v.id===requested)){state.view=requested;if(requested!=='base'){state.selected=views.find(v=>v.id===requested).roots[0];state.depth=2;document.querySelectorAll('#depth button').forEach(b=>b.classList.toggle('active',b.dataset.value==='2'))}}
+    render();
+  </script>
+</body>
+</html>
