@@ -5,7 +5,7 @@
     "mode": "native",
     "instructions": "claude plugin marketplace add <插件仓库目录或 Git URL>；claude plugin install bridge@bridge-marketplace",
     "reference": "https://code.claude.com/docs/en/plugins/install",
-    "verification": "声明已检查；客户端运行未验证"
+    "verification": "Claude Code 2.1.195 原生安装通过；未登录，分析未完成"
   },
   {
     "id": "codex",
@@ -13,7 +13,7 @@
     "mode": "native",
     "instructions": "codex plugin marketplace add <插件仓库目录或 Git URL>；codex plugin add bridge@bridge-marketplace；也可使用 /plugins",
     "reference": "https://developers.openai.com/codex/plugins",
-    "verification": "声明已检查；客户端运行未验证"
+    "verification": "Codex CLI 0.164.0 原生安装、真实分析、校验和渲染通过；页面交互未完成"
   },
   {
     "id": "cursor",
@@ -69,7 +69,7 @@
     "mode": "native",
     "instructions": "/plugins install <插件仓库目录或 GitHub URL>；/reload；/skill:bridge:bridge",
     "reference": "https://www.kimi.com/code/docs/kimi-code-cli/customization/plugins.html",
-    "verification": "声明已检查；客户端运行未验证"
+    "verification": "Kimi Code 2.3.0 原生安装通过；模型服务 429 周额度耗尽，分析未完成"
   },
   {
     "id": "opencode",
@@ -78,7 +78,7 @@
     "directory": ".config/opencode/skills",
     "reference": "https://opencode.ai/docs/skills/",
     "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
-    "verification": "适配已实现，客户端运行未验证"
+    "verification": "OpenCode 1.17.20 脚本安装与 Skill 发现通过；分析未实测"
   },
   {
     "id": "antigravity",

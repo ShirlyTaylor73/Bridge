@@ -39,3 +39,18 @@ Bridge 最终希望形成这样的协作闭环：
 **理解已有代码 → 指挥 AI 修改 → 理解改动及影响 → 审查、反馈与纠正。**
 
 **更好的理解，成就更好的代码。**
+
+## 安装 Bridge 插件
+
+Bridge 现在以多客户端插件交付：原生客户端使用自带插件管理器，其他客户端使用 `install.sh` / `install.ps1`。所有入口共享 `skills/bridge/`，分析结果仍写入目标仓库的 `.bridge/index.html`。需要 Node.js 22+。
+
+在本仓库根目录中，以 Codex 为例：
+
+```sh
+codex plugin marketplace add .
+codex plugin add bridge@bridge-marketplace
+```
+
+安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，实际验证范围见 [插件验收记录](docs/bridge_plugin_validation.md)。
+
+开发检查：`npm run check`；隔离测试：`npm test`。无需安装 npm 依赖。
