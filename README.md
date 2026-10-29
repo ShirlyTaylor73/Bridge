@@ -44,12 +44,14 @@ Bridge 最终希望形成这样的协作闭环：
 
 Bridge 现在以多客户端插件交付：原生客户端使用自带插件管理器，其他客户端使用 `install.sh` / `install.ps1`。所有入口共享 `skills/bridge/`，分析结果仍写入目标仓库的 `.bridge/index.html`。需要 Node.js 22+。
 
-在本仓库根目录中，以 Codex 为例：
+以 Codex 为例，在任意目录添加远程插件市场并安装，无需手动 clone Bridge：
 
 ```sh
-codex plugin marketplace add .
+codex plugin marketplace add OWNER/REPO
 codex plugin add bridge@bridge-marketplace
 ```
+
+将 `OWNER/REPO` 替换为 Bridge 发布仓库的 GitHub 所有者和仓库名。当前尚未配置发布地址，这里使用占位符。客户端会自行获取插件。
 
 安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，实际验证范围见 [插件验收记录](docs/bridge_plugin_validation.md)。
 
