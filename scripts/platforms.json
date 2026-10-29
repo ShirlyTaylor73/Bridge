@@ -1,0 +1,146 @@
+[
+  {
+    "id": "claude",
+    "name": "Claude Code",
+    "mode": "native",
+    "instructions": "claude plugin marketplace add <插件仓库目录或 Git URL>；claude plugin install bridge@bridge-marketplace",
+    "reference": "https://code.claude.com/docs/en/plugins/install",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "codex",
+    "name": "Codex",
+    "mode": "native",
+    "instructions": "codex plugin marketplace add <插件仓库目录或 Git URL>；codex plugin add bridge@bridge-marketplace；也可使用 /plugins",
+    "reference": "https://developers.openai.com/codex/plugins",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "cursor",
+    "name": "Cursor",
+    "mode": "native",
+    "instructions": "通过 Customize → Plugins 从本仓库 Git URL 或本地目录安装；使用支持 Agent Plugins 的版本。",
+    "reference": "https://cursor.com/docs/plugins",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "copilot",
+    "name": "Copilot CLI",
+    "mode": "native",
+    "instructions": "copilot plugin marketplace add <插件仓库目录或 Git URL>；copilot plugin install bridge@bridge-marketplace",
+    "reference": "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "vscode",
+    "name": "VS Code Copilot",
+    "mode": "native",
+    "instructions": "运行 Chat: Install Plugin from Source，输入本仓库 Git URL 或本地目录。",
+    "reference": "https://code.visualstudio.com/docs/copilot/customization/agent-plugins",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini CLI",
+    "mode": "native",
+    "instructions": "gemini extensions install <插件仓库目录或 Git URL>",
+    "reference": "https://geminicli.com/docs/extensions/reference/",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "pi",
+    "name": "Pi Agent",
+    "mode": "native",
+    "instructions": "pi install <插件仓库目录或 Git URL>",
+    "reference": "https://pi.dev/docs/latest/packages",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "openclaw",
+    "name": "OpenClaw",
+    "mode": "native",
+    "instructions": "openclaw plugins install <插件仓库目录>；或 openclaw plugins install bridge --marketplace <Git URL>",
+    "reference": "https://docs.openclaw.ai/plugins/bundles",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "kimi",
+    "name": "Kimi Code",
+    "mode": "native",
+    "instructions": "/plugins install <插件仓库目录或 GitHub URL>；/reload；/skill:bridge:bridge",
+    "reference": "https://www.kimi.com/code/docs/kimi-code-cli/customization/plugins.html",
+    "verification": "声明已检查；客户端运行未验证"
+  },
+  {
+    "id": "opencode",
+    "name": "OpenCode",
+    "mode": "skill-link",
+    "directory": ".config/opencode/skills",
+    "reference": "https://opencode.ai/docs/skills/",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "antigravity",
+    "name": "Antigravity",
+    "mode": "skill-link",
+    "directory": ".gemini/antigravity/skills",
+    "reference": "https://antigravity.google/docs/skills",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "vibe",
+    "name": "Vibe CLI",
+    "mode": "skill-link",
+    "directory": ".vibe/skills",
+    "reference": "https://docs.mistral.ai/mistral-vibe/skills",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "hermes",
+    "name": "Hermes",
+    "mode": "skill-link",
+    "directory": ".hermes/skills",
+    "reference": "https://hermes-agent.nousresearch.com/docs/user-guide/features/skills",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "cline",
+    "name": "Cline",
+    "mode": "skill-link",
+    "directory": ".cline/skills",
+    "reference": "https://docs.cline.bot/features/skills",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "trae",
+    "name": "Trae",
+    "mode": "skill-link",
+    "directory": ".trae/skills",
+    "reference": "https://docs.trae.ai/ide/skills",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "nanobot",
+    "name": "Nanobot",
+    "mode": "skill-link",
+    "directory": ".nanobot/workspace/skills",
+    "reference": "https://github.com/HKUDS/nanobot",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  },
+  {
+    "id": "kiro",
+    "name": "Kiro",
+    "mode": "skill-link",
+    "directory": ".kiro/skills",
+    "reference": "https://kiro.dev/docs/skills/",
+    "directoryBasis": "Understand-Anything e24fcf6 install.sh；OpenCode 使用官方专属目录",
+    "verification": "适配已实现，客户端运行未验证"
+  }
+]
