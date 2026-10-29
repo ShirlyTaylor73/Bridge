@@ -105,7 +105,7 @@
       const phases=flows[state.view]||[],query=state.search.toLowerCase();
       const html=phases.map((phase,index)=>{const steps=phase.steps.filter(step=>{const item=evidence[step.key];return!query||`${item.path} ${item.symbol} ${item.code} ${step.via||''} ${step.object||''}`.toLowerCase().includes(query)});if(!steps.length)return'';return`<details class="flow-phase" ${index===0||query?'open':''}><summary><span class="phase-number">${index+1}</span><span class="phase-heading"><span class="phase-title">${esc(phase.title)}</span><span class="phase-desc">${esc(phase.desc)}</span></span><span class="phase-count">${steps.length} 个位置</span>${ICONS.chevron}</summary><div class="phase-body">${steps.map((step,stepIndex)=>`${stepIndex?flowConnector(step):''}${flowNode(step)}`).join('')}</div></details>`}).join('');
       document.getElementById('flow-canvas').innerHTML=`<div class="flow-intro"><span>默认收起源码，点击卡片底部展开</span><div class="flow-legend"><span><i></i>调用</span><span class="sequence"><i></i>流程继续</span></div></div>${html||'<div class="flow-empty">没有匹配的代码位置或调用方式</div>'}`;
-      document.querySelectorAll('[data-code-key]').forEach(details=>details.addEventListener('toggle',()=>{if(details.open)state.expandedCode.add(details.dataset.codeKey);else state.expandedCode.delete(details.dataset.codeKey)}));
+      document.querySelectorAll('[data-code-key]').forEach(details=>details.addEventListener('toggle',()=>{if(!details.isConnected||state.expand)return;if(details.open)state.expandedCode.add(details.dataset.codeKey);else state.expandedCode.delete(details.dataset.codeKey)}));
       const status=document.getElementById('relation-status');status.classList.remove('active');status.innerHTML='<span>实线表示真实调用；灰色连接只表示流程先后。Agent 注释与原始源码分开显示。</span>';
     }
     function renderInspector(){
@@ -123,7 +123,7 @@
     function selectNode(id){state.selectedNode=id;render();if(window.innerWidth<=1120)openInspector()}
     function openInspector(){state.inspectorOpen=true;document.getElementById('inspector').classList.add('open')}
     document.getElementById('search').addEventListener('input',event=>{state.search=event.target.value.trim();renderContent()});
-    document.getElementById('expand').addEventListener('click',()=>{state.expand=!state.expand;renderContent()});
+    document.getElementById('expand').addEventListener('click',()=>{state.expand=!state.expand;if(!state.expand)state.expandedCode.clear();renderContent()});
     document.getElementById('mobile-inspector').addEventListener('click',openInspector);
     document.getElementById('inspector-close').addEventListener('click',()=>{state.inspectorOpen=false;document.getElementById('inspector').classList.remove('open')});
     const requested=new URLSearchParams(location.search).get('view');if(DATA.views.some(view=>view.id===requested)){state.view=requested}
