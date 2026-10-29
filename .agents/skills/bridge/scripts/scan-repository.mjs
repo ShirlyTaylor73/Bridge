@@ -262,6 +262,18 @@ function isGitRepository(root) {
   return { git: topLevel === root };
 }
 
+function gitCommit(root) {
+  const result = spawnSync('git', ['-C', root, 'rev-parse', 'HEAD'], {
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`git rev-parse HEAD 失败：${result.stderr?.trim() || `退出码 ${result.status}`}`);
+  }
+  return result.stdout.trim();
+}
+
 function gitFiles(root) {
   const result = spawnSync('git', ['-C', root, 'ls-files', '-z', '-co', '--exclude-standard'], {
     maxBuffer: 256 * 1024 * 1024,
@@ -412,7 +424,7 @@ function scan() {
   }
   const result = {
     version: 1,
-    project: { root },
+    project: { root, commit: git.git ? gitCommit(root) : null },
     files,
     directories: [...directorySet].sort(),
     warnings,

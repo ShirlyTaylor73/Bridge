@@ -28,6 +28,9 @@ function createValidator(root) {
   let directoryNodeCount = 0;
   let viewCount = 0;
   let expectedFileCount = null;
+  let hasScanCommit = false;
+  let scanCommit;
+  let analysisCommit;
 
   function fail(location, message) {
     errors.push(`${location}：${message}`);
@@ -86,17 +89,24 @@ function createValidator(root) {
   }
 
   function validateProject(value, location, isScan = false) {
-    if (!checkKeys(value, new Set(isScan ? ['root'] : ['name', 'root', 'commit', 'generatedAt', 'fileCount']), location)) return;
+    if (!checkKeys(value, new Set(isScan ? ['root', 'commit'] : ['name', 'root', 'commit', 'generatedAt', 'fileCount']), location)) return;
     const projectRoot = requiredString(value, 'root', location);
     if (projectRoot !== null && projectRoot !== root) {
       fail(`${location}.root`, `必须等于真实项目根目录 ${root}`);
     }
-    if (isScan) return;
-    requiredString(value, 'name', location);
-    requiredString(value, 'generatedAt', location);
-    if (value.commit !== null && (typeof value.commit !== 'string' || !value.commit.trim())) {
+    if ((!isScan || 'commit' in value) && value.commit !== null && (typeof value.commit !== 'string' || !value.commit.trim())) {
       fail(`${location}.commit`, '必须是 null 或非空字符串');
     }
+    if (isScan) {
+      if ('commit' in value) {
+        hasScanCommit = true;
+        scanCommit = value.commit;
+      }
+      return;
+    }
+    analysisCommit = value.commit;
+    requiredString(value, 'name', location);
+    requiredString(value, 'generatedAt', location);
     if (!Number.isInteger(value.fileCount) || value.fileCount < 0) {
       fail(`${location}.fileCount`, '必须是非负整数');
     } else {
@@ -401,6 +411,9 @@ function createValidator(root) {
     }
     if (expectedFileCount !== null && expectedFileCount !== scanFiles.size) {
       fail('analysis.project.fileCount', `必须等于 scan 文件数 ${scanFiles.size}`);
+    }
+    if (hasScanCommit && analysisCommit !== scanCommit) {
+      fail('analysis.project.commit', `必须等于 scan.project.commit ${JSON.stringify(scanCommit)}`);
     }
     for (const key of evidenceKeys) {
       if (!referencedEvidence.has(key)) fail(`analysis.evidence.${key}`, '证据未被任何调用视图引用');

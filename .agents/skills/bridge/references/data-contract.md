@@ -20,7 +20,7 @@
 }
 ```
 
-`fileCount` 必须等于扫描保留文件数，也必须等于文件节点数。不得收录原型中的示例文件数。
+`root`、`commit` 和 `fileCount` 必须与扫描结果一致，其中 `fileCount` 也必须等于文件节点数。目标不是 Git 工作树根目录时 `commit` 为 `null`，不能继承外层仓库或根据归档来源猜测 commit。不得收录原型中的示例文件数。
 
 ## 文件树节点
 
@@ -110,4 +110,4 @@
 
 ## scan.json
 
-扫描器生成 `version`、`project.root`、`files`、`directories`、`warnings` 和 `excluded`。分析者只消费清单，不手工修改扫描结果来掩盖漏文件。源码在扫描后发生变化时重新扫描并复核证据。
+扫描器生成 `version`、`project.root`、`project.commit`、`files`、`directories`、`warnings` 和 `excluded`。只有目标本身是 Git 工作树根目录时记录其 HEAD；其他情况 `commit` 为 `null`。分析者只消费清单，不手工修改扫描结果来掩盖漏文件。源码在扫描后发生变化时重新扫描并复核证据。

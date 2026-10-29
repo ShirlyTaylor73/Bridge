@@ -8,7 +8,7 @@
 node "<skill-root>/scripts/scan-repository.mjs" "<repository-root>"
 ```
 
-读取 `.bridge/scan.json`，向用户简要说明扫描规模和警告。扫描结果是本轮分析清单。不要读取扫描器标记为 secret 的文件，不要跟踪符号链接，也不要把依赖或构建产物纳入语义分析。
+读取 `.bridge/scan.json`，向用户简要说明扫描规模和警告。扫描结果是本轮分析清单；项目根路径和 commit 以其中的 `project` 为准，非 Git 快照使用 `null`，不要读取外层仓库的 commit。不要读取扫描器标记为 secret 的文件，不要跟踪符号链接，也不要把依赖或构建产物纳入语义分析。
 
 大型仓库按顶层目录或关联模块分批阅读和记录摘要。中间结果可放 `.bridge/intermediate/`，但最终只发布通过校验的完整数据。失败不能静默改成少量示例文件；明确说明无法覆盖的部分并停止发布“完整”结果。
 
