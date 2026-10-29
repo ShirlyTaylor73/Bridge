@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-创建一个可移植的项目级 Agent Skill，帮助 Agent 对指定代码仓库进行有源码证据的理解分析，并生成可直接打开的 `.bridge/index.html`。页面必须复现 `prototype/rpent.html` 的信息架构、视觉风格和渐进式交互，而不是由 Agent 针对每个仓库重新设计。
+创建一个可移植的 Agent Skill（当前通过多客户端插件交付，详见 `docs/bridge_plugin_spec.md`），帮助 Agent 对指定代码仓库进行有源码证据的理解分析，并生成可直接打开的 `.bridge/index.html`。页面必须复现 `prototype/rpent.html` 的信息架构、视觉风格和渐进式交互，而不是由 Agent 针对每个仓库重新设计。
 
 默认分析当前目录，也接受用户指定的仓库路径。分析过程只读取目标源码，仅在目标仓库 `.bridge/` 写入分析产物，不修改源码。
 
@@ -52,7 +52,7 @@
 ## 5. 文件规划
 
 ```text
-.agents/skills/bridge/
+skills/bridge/
 ├── SKILL.md
 ├── assets/dashboard.html
 ├── references/analysis-workflow.md
@@ -64,7 +64,7 @@
     └── render-dashboard.mjs
 ```
 
-脚本仅使用 Node.js 标准库。skill 使用标准 frontmatter，不加入宿主专属字段、变量或安装行为。
+脚本仅使用 Node.js 标准库。skill 使用标准 frontmatter，不加入宿主专属字段、变量或安装行为；宿主声明和安装逻辑放在插件交付层。
 
 ## 6. 质量门槛
 
