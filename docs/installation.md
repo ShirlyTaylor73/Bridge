@@ -4,7 +4,7 @@ Bridge 0.1.0 将同一份 `skills/bridge/` 交付给多个客户端。无需 npm
 
 原生插件由客户端直接从远程仓库获取，无需手动 clone，也不要求进入 Bridge 仓库。安装完成后，在**要分析的仓库**启动新会话并调用 Bridge。插件名和 Skill 名均为 `bridge`。
 
-下文 `OWNER/REPO` 表示 Bridge 发布仓库的 GitHub 所有者和仓库名，`<Git URL>` 表示完整仓库地址；使用前替换为真实地址。当前仓库未配置 remote，因此这些是占位符，不是已发布地址。
+发布仓库：[ShirlyTaylor73/Bridge](https://github.com/ShirlyTaylor73/Bridge)。以下远程安装命令可直接使用。
 
 ## 原生插件安装
 
@@ -12,15 +12,15 @@ Bridge 0.1.0 将同一份 `skills/bridge/` 交付给多个客户端。无需 npm
 
 | 客户端 | 远程安装 | 调用 |
 | --- | --- | --- |
-| Claude Code | `claude plugin marketplace add OWNER/REPO`，再 `claude plugin install bridge@bridge-marketplace` | `/bridge:bridge` 或自然语言 |
-| Codex CLI | `codex plugin marketplace add OWNER/REPO`，再 `codex plugin add bridge@bridge-marketplace`；也可在 `/plugins` 中安装 | 选择 bridge 插件 Skill，或要求“使用 Bridge 插件分析当前仓库” |
+| Claude Code | `claude plugin marketplace add ShirlyTaylor73/Bridge`，再 `claude plugin install bridge@bridge-marketplace` | `/bridge:bridge` 或自然语言 |
+| Codex CLI | `codex plugin marketplace add ShirlyTaylor73/Bridge`，再 `codex plugin add bridge@bridge-marketplace`；也可在 `/plugins` 中安装 | 选择 bridge 插件 Skill，或要求“使用 Bridge 插件分析当前仓库” |
 | Cursor | Customize → Plugins 中使用支持 Agent Plugins 的安装入口，输入远程仓库地址 | 选择 Bridge Skill 或自然语言 |
-| Copilot CLI | `copilot plugin marketplace add OWNER/REPO`，再 `copilot plugin install bridge@bridge-marketplace` | 选择 Bridge Skill 或自然语言 |
+| Copilot CLI | `copilot plugin marketplace add ShirlyTaylor73/Bridge`，再 `copilot plugin install bridge@bridge-marketplace` | 选择 Bridge Skill 或自然语言 |
 | VS Code Copilot | 命令面板执行 `Chat: Install Plugin from Source`，输入远程仓库 URL | 在已启用的插件 Skill 中选择 Bridge |
-| Gemini CLI | `gemini extensions install "<Git URL>"` | 选择 Bridge Skill 或自然语言 |
-| Pi Agent | `pi install "<Git URL>"` | `/skill:bridge` 或自然语言 |
-| OpenClaw | `openclaw plugins install bridge --marketplace "<Git URL>"` | 选择 Bridge Skill 或自然语言 |
-| Kimi Code | TUI 中执行 `/plugins install https://github.com/OWNER/REPO`，之后 `/reload` | `/skill:bridge:bridge` |
+| Gemini CLI | `gemini extensions install "https://github.com/ShirlyTaylor73/Bridge"` | 选择 Bridge Skill 或自然语言 |
+| Pi Agent | `pi install "https://github.com/ShirlyTaylor73/Bridge"` | `/skill:bridge` 或自然语言 |
+| OpenClaw | `openclaw plugins install bridge --marketplace "https://github.com/ShirlyTaylor73/Bridge"` | 选择 Bridge Skill 或自然语言 |
+| Kimi Code | TUI 中执行 `/plugins install https://github.com/ShirlyTaylor73/Bridge`，之后 `/reload` | `/skill:bridge:bridge` |
 
 Codex 支持界面以官方文档为准，不能将 CLI/桌面插件能力等同于 IDE 扩展能力。安装后的缓存、更新和卸载遵循各客户端自身规则。
 
@@ -31,7 +31,7 @@ Codex 支持界面以官方文档为准，不能将 CLI/桌面插件能力等同
 以下客户端使用用户级 Skill 发现目录；不创建运行时 adapter。仅这类兼容脚本安装需要先 clone 或下载 Bridge，再进入下载目录运行脚本：
 
 ```sh
-git clone "<Git URL>" Bridge
+git clone "https://github.com/ShirlyTaylor73/Bridge" Bridge
 cd Bridge
 ```
 
