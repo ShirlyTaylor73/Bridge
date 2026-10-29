@@ -9,7 +9,7 @@ Generate a source-grounded repository understanding dashboard without changing r
 
 ## Workflow
 
-1. Read [references/analysis-workflow.md](references/analysis-workflow.md) and [references/data-contract.md](references/data-contract.md). Resolve the user-supplied repository path, or use the current working directory. All analysis output belongs in that repository's `.bridge/` directory.
+1. Read [references/analysis-workflow.md](references/analysis-workflow.md) and [references/data-contract.md](references/data-contract.md). Resolve the user-supplied repository path, or use the user workspace directory captured before running commands. The installed plugin/skill directory is a resource location, never the default analysis target. All analysis output belongs in that repository's `.bridge/` directory.
 2. Run `scan-repository.mjs` from `scripts/` next to this file, passing the repository root. Read the resulting scan and warnings. Never read files excluded as secrets to make them part of the report.
 3. Read actual source and produce `.bridge/analysis.json` following the data contract. Cover every retained text file in the tree. Derive call views from confirmed entry points and execution paths rather than copying example repository names or flows.
 4. Run `validate-analysis.mjs`, fix all reported data or evidence errors, then run `render-dashboard.mjs`. Do not edit `assets/dashboard.html` or bypass validation to force output.

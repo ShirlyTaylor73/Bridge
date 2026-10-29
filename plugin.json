@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "bridge",
+  "version": "0.1.0",
+  "description": "基于源码证据理解仓库结构与调用流程，生成可交互的静态 HTML 报告。"
+}

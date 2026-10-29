@@ -1,0 +1,22 @@
+{
+  "name": "bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "基于源码证据理解仓库结构与调用流程，生成可交互的静态 HTML 报告。",
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
+  "scripts": {
+    "check": "node scripts/check-package.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
