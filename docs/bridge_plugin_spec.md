@@ -1,5 +1,7 @@
 # Bridge 多客户端插件交付规格
 
+> 此文保留 0.1 版本设计记录。当前实现以 [0.2.0 主题探索规格](bridge_explore_spec.md) 为准。
+
 ## 目标与边界
 
 将项目级 Skill 升级为根目录可安装插件。保持现有扫描、语义分析、证据校验和静态 HTML 输出；不引入多子 Agent、MCP 服务或启动 hooks。插件与 Skill 名称均为 `bridge`，版本 `0.1.0`，仅依赖 Node.js 标准库，安装器最低 Node.js 22。

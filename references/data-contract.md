@@ -68,7 +68,7 @@ ID 使用有语义的英文 kebab-case，最长 80 字符，避开 base、index�
 
 ## 代码证据
 
-`evidence` 是以稳定 key 为索引的对象。同一真实代码位置可在多个视图复用：
+`evidence` 是以稳定 key 为索引的对象。同一真实代码位置可在本主题多个步骤复用：
 
 ```json
 {
@@ -94,14 +94,10 @@ ID 使用有语义的英文 kebab-case，最长 80 字符，避开 base、index�
 
 ## 探索阶段与步骤
 
-以下是内部视图结构示意；独立探索文件只采用其中的 `phases`，主题标题等使用上方字段。
+探索的 `phases` 结构如下，主题标题等使用上方元数据字段。
 
 ```json
 {
-  "id": "cli",
-  "name": "CLI 任务执行",
-  "desc": "从命令入口理解主链路",
-  "icon": "play",
   "phases": [
     {
       "title": "入口与初始化",
@@ -121,9 +117,7 @@ ID 使用有语义的英文 kebab-case，最长 80 字符，避开 base、index�
 }
 ```
 
-- `id` 唯一且不能为 `base`；`icon` 只能是 `play` 或 `dashboard`。
-- `name`/`desc` 来自真实仓库。普通执行流程用 `play`，浏览器监控类视图用 `dashboard`。
-- 每个视图至少一个阶段，每个阶段至少一个步骤。阶段按学习任务组织，不为了凑数量拆阶段。
+- 每个探索至少一个阶段，每个阶段至少一个步骤。阶段按学习任务组织，不为了凑数量拆阶段。
 - `key` 引用 `evidence`。阶段第一步通常省略 `via`；其余步骤必须填写 `via`，描述进入该位置的实际调用或流程原因。
 - `kind` 默认为 `calls`，可选 `http`、`callback`、`sequence`。直接函数调用和实例调用都用 `calls`，在 `via`/`object` 中明确实例；协议调用用 `http`；注入回调用 `callback`；仅表示执行先后用 `sequence`。
 - `object` 写承接调用的变量、属性及可确认类型，如 `planner: ApiAgentLoop`；无法确认时省略，不编造。

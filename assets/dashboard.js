@@ -118,7 +118,7 @@ async function start() {
           if(topic.id!==id||!Array.isArray(topic.phases)||!topic.evidence)throw new Error('主题数据格式无效');
           currentTopic=topic;evidence=topic.evidence;flows[id]=topic.phases;loadError='';
           render();
-        } catch(error){if(token!==requestId)return;loadError=`主题 ${selected.path} 加载失败：${error.message}`;render();}
+        } catch(error){if(token!==requestId)return;delete flows[id];currentTopic=null;evidence={};loadError=`主题 ${selected.path} 加载失败：${error.message}`;render();}
       } else {render();document.getElementById('tree-scroll').scrollTop=state.treeScroll;}
     }
     function selectNode(id){

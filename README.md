@@ -35,7 +35,7 @@ Bridge 最终希望形成这样的协作闭环：
 
 ## 安装 Bridge 插件
 
-Bridge 现在以多客户端插件交付：原生客户端使用自带插件管理器，其他客户端使用 `install.sh` / `install.ps1`。所有入口共享 `skills/bridge/`，分析结果仍写入目标仓库的 `.bridge/index.html`。需要 Node.js 22+。
+Bridge 现在以多客户端插件交付：原生客户端使用自带插件管理器，其他客户端使用 `install.sh` / `install.ps1`。插件提供 `bridge` 和 `explore` 两个 Skill，共享脚本及页面资产；结果按主题保存在目标仓库的 `.bridge/`。需要 Node.js 22+。
 
 以 Codex 为例，在任意目录添加远程插件市场并安装，无需手动 clone Bridge：
 
@@ -46,6 +46,27 @@ codex plugin add bridge@bridge-marketplace
 
 客户端会直接从 [GitHub 仓库](https://github.com/ShirlyTaylor73/Bridge) 获取插件。
 
-安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，实际验证范围见 [插件验收记录](docs/bridge_plugin_validation.md)。
+安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，0.2.0 实际验证范围见 [验收记录](docs/bridge_explore_validation.md)。
 
 开发检查：`npm run check`；隔离测试：`npm test`。无需安装 npm 依赖。
+
+## 0.2.0：建立概览，再按主题探索
+
+在目标仓库的新会话中：
+
+1. **建立概览**：“使用 Bridge 的 bridge Skill 建立当前仓库的文件树和职责概览。”
+2. **新增主题**：“使用 Bridge 的 explore Skill，调研训练脚本从数据加载到训练循环的整体关系。”
+3. **深化主题**：“继续深化 training-pipeline，补充训练循环中的异常处理。”
+
+支持命名空间命令的客户端可使用 `/bridge:bridge`、`/bridge:explore`；Kimi 对应 `/skill:bridge:bridge`、`/skill:bridge:explore`。具体入口见安装说明。
+
+探索使用中文标题与语义文件名，例如 `explorations/training-pipeline.json`。Agent 先查主题索引；相似主题意图不明确时请你选择，明确追问沿用原文件。新增探索保持基础树、页面资产和旧主题原样；显式更新会备份该主题。再次调用 bridge 默认打开已有页面，刷新概览需明确提出。
+
+页面通过本地 HTTP 服务查看，Skill 会提供访问地址。也可手动启动：
+
+```sh
+node /path/to/Bridge/scripts/serve-dashboard.mjs /path/to/target-repository
+# 固定端口可追加 --port 8765
+```
+
+服务仅绑定 `127.0.0.1`，默认自动选择端口。页面刷新后读取主题索引，选择主题时加载独立结果。本版使用全新初始化的 `.bridge/`；旧版报告可先移到其他目录保留。

@@ -2,26 +2,29 @@
 
 ## 项目结构
 
-Bridge 是仓库理解与可视化分析工具，以多客户端插件交付，共享一份可移植 Agent Skill。
+Bridge 是仓库理解与可视化分析工具，以多客户端插件交付，提供 bridge 与 explore 两个可移植 Agent Skill。
 
-- `skills/bridge/scripts/`：扫描、数据校验和 HTML 渲染的 Node.js 脚本。
-- `skills/bridge/assets/dashboard.html`：实际使用的页面模板。
-- `skills/bridge/references/`：分析流程、数据契约和原型约束。
+- `scripts/`：扫描、数据校验和 HTML 渲染的 Node.js 脚本。
+- `assets/dashboard.html`、`assets/dashboard.css`、`assets/dashboard.js`：实际使用的页面模板。
+- `references/`：分析流程、数据契约和原型约束。
 - `prototype/rpent.html`：页面信息架构与交互的参考原型。
-- `docs/`：需求规格与调研；修改功能前阅读 `docs/bridge_skill_spec.md` 和 `docs/bridge_plugin_spec.md`。
+- `docs/`：需求规格与调研；修改功能前阅读 `docs/bridge_explore_spec.md`。
 - `.bridge/`：扫描、分析和页面生成物，已被 Git 忽略。`tests/` 存放 Node.js 内置测试，根目录 `scripts/` 提供安装器和插件校验。
 
 ## 开发与验证命令
 
-脚本仅依赖 Node.js 标准库；无需安装 npm 依赖或启动服务器。从仓库根目录运行：
+脚本仅依赖 Node.js 标准库；无需安装 npm 依赖，Dashboard 通过本地 HTTP 服务查看。从仓库根目录运行：
 
 ```sh
-node skills/bridge/scripts/scan-repository.mjs .
-node skills/bridge/scripts/validate-analysis.mjs .
-node skills/bridge/scripts/render-dashboard.mjs .
+npm run check
+npm test
+node scripts/scan-repository.mjs /path/to/repo
+node scripts/publish-base.mjs /path/to/repo /path/to/base-candidate.json
+node scripts/publish-exploration.mjs /path/to/repo /path/to/topic-candidate.json
+node scripts/serve-dashboard.mjs /path/to/repo
 ```
 
-第一条扫描当前仓库。随后按 `references/data-contract.md` 准备 `.bridge/analysis.json`，第二条校验分析数据与源码证据，第三条生成 `.bridge/index.html`。扫描不会自动完成语义分析。直接用浏览器打开生成页面检查效果。
+扫描生成清单；Agent 按 `references/data-contract.md` 提供候选，发布脚本校验后写入。基础树在 `.bridge/base/`，探索在 `.bridge/explorations/`。主题 ID 使用语义 kebab-case。新增探索只新增主题并更新索引；更新已有主题须提供 `--update --expected-hash <旧文件SHA256>`，由发布器备份。普通探索保持基础数据、页面资产及其他主题原样。页面更新通过显式 `--upgrade-page` 执行。
 
 ## 编码风格与命名
 

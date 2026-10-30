@@ -10,9 +10,9 @@ export async function publishExploration(directory, candidate, { update = false,
   const { root, bridge } = outputRoot(directory);
   initialized(bridge);
   const data = readJson(candidate);
+  validateExploration(root, data, scanRepository(root));
   return withLock(bridge, lock => {
-    const index = readIndex(bridge), scan = scanRepository(root);
-    validateExploration(root, data, scan);
+    const index = readIndex(bridge);
     const position = index.topics.findIndex(item => item.id === data.id);
     const relative = `explorations/${data.id}.json`, target = safeOutput(bridge, relative);
     if (!update && (position !== -1 || fs.existsSync(target))) throw new Error('主题已存在，请选择更新已有主题或细化新主题名称');

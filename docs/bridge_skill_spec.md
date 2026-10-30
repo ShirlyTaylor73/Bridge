@@ -1,5 +1,7 @@
 # Bridge Skill 需求规格
 
+> 此文保留 0.1 版本设计记录。当前实现以 [0.2.0 主题探索规格](bridge_explore_spec.md) 为准。
+
 ## 1. 目标
 
 创建一个可移植的 Agent Skill（当前通过多客户端插件交付，详见 `docs/bridge_plugin_spec.md`），帮助 Agent 对指定代码仓库进行有源码证据的理解分析，并生成可直接打开的 `.bridge/index.html`。页面必须复现 `prototype/rpent.html` 的信息架构、视觉风格和渐进式交互，而不是由 Agent 针对每个仓库重新设计。
