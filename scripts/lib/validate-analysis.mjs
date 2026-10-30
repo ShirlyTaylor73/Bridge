@@ -17,7 +17,7 @@ function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function createValidator(root) {
+export function createValidator(root, { exploration = false } = {}) {
   const errors = [];
   const scanFiles = new Set();
   const scanDirectories = new Set();
@@ -406,7 +406,7 @@ function createValidator(root) {
   }
 
   function finish() {
-    for (const filePath of scanFiles) {
+    for (const filePath of exploration ? [] : scanFiles) {
       if (!treeFiles.has(filePath)) fail('analysis.nodes', `文件树缺少扫描文件 ${filePath}`);
     }
     if (expectedFileCount !== null && expectedFileCount !== scanFiles.size) {
@@ -430,63 +430,10 @@ function createValidator(root) {
     if (!checkKeys(analysis, allowed, 'analysis')) return;
     if (analysis.version !== 1) fail('analysis.version', '必须等于 1');
     validateProject(analysis.project, 'analysis.project');
-    validateNodes(analysis.nodes);
+    if (!exploration) validateNodes(analysis.nodes);
     validateEvidence(analysis.evidence);
     validateViews(analysis.views);
   }
 
   return { validateScan, validateAnalysis, finish };
-}
-
-function readJson(filePath, label) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (error) {
-    throw new Error(`读取 ${label} ${filePath} 失败：${error.message}`);
-  }
-}
-
-function main() {
-  const args = process.argv.slice(2);
-  if (args.length < 1 || args.length > 3) usage();
-  const root = fs.realpathSync(path.resolve(args[0]));
-  if (!fs.statSync(root).isDirectory()) throw new Error('project-root 不是目录');
-  const analysisPath = args[1] ? path.resolve(args[1]) : path.join(root, '.bridge', 'analysis.json');
-  const scanPath = args[2] ? path.resolve(args[2]) : path.join(root, '.bridge', 'scan.json');
-  const validator = createValidator(root);
-  let analysis;
-  let scan;
-  const inputErrors = [];
-  try {
-    analysis = readJson(analysisPath, 'analysis');
-  } catch (error) {
-    inputErrors.push(error.message);
-  }
-  try {
-    scan = readJson(scanPath, 'scan');
-  } catch (error) {
-    inputErrors.push(error.message);
-  }
-
-  let result = { errors: [], summary: '' };
-  if (analysis !== undefined && scan !== undefined) {
-    validator.validateScan(scan);
-    validator.validateAnalysis(analysis);
-    result = validator.finish();
-  }
-  const errors = [...inputErrors, ...result.errors];
-  if (errors.length) {
-    console.error(`校验失败，共 ${errors.length} 个错误：`);
-    for (const error of errors) console.error(`- ${error}`);
-    process.exitCode = 1;
-    return;
-  }
-  console.log(result.summary);
-}
-
-try {
-  main();
-} catch (error) {
-  console.error(`校验失败：${error.message}`);
-  process.exitCode = 1;
 }

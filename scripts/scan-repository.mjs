@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { TextDecoder } from 'node:util';
@@ -318,14 +319,9 @@ function inspectFile(root, relativePath) {
   }
 }
 
-function scan() {
-  const args = process.argv.slice(2);
-  if (args.length < 1 || args.length > 2) usage();
-  const root = fs.realpathSync(path.resolve(args[0]));
+export function scanRepository(directory) {
+  const root = fs.realpathSync(path.resolve(directory));
   if (!fs.statSync(root).isDirectory()) throw new Error('project-root 不是目录');
-  const output = args[1]
-    ? path.resolve(args[1])
-    : path.join(root, '.bridge', 'scan.json');
   const warnings = [];
   const excluded = [];
   const files = [];
@@ -430,15 +426,17 @@ function scan() {
     warnings,
     excluded,
   };
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
-  console.log(`扫描完成：${files.length} 个文本文件，${excluded.length} 项排除，${warnings.length} 条警告。`);
-  console.log(output);
+  return result;
 }
 
-try {
-  scan();
-} catch (error) {
-  console.error(`扫描失败：${error.message}`);
-  process.exitCode = 1;
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    const args = process.argv.slice(2);
+    if (args.length < 1 || args.length > 2) usage();
+    const result = scanRepository(args[0]);
+    const output = args[1] ? path.resolve(args[1]) : path.join(result.project.root, '.bridge', 'work', 'scan.json');
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
+    console.log(`扫描完成：${result.files.length} 个文本文件，${result.excluded.length} 项排除，${result.warnings.length} 条警告。\n${output}`);
+  } catch (error) { console.error(`扫描失败：${error.message}`); process.exitCode = 1; }
 }
