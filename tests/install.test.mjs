@@ -111,6 +111,7 @@ test('提交状态失败时回滚新链接与 Kiro 配置', (t) => {
   assert.throws(() => run(home, 'kiro'), /模拟磁盘失败/);
   assert.ok(!fs.existsSync(path.join(home, '.kiro/skills/bridge')));
   assert.ok(!fs.existsSync(path.join(home, '.kiro/agents/bridge.json')));
+  assert.ok(!fs.existsSync(path.join(home, '.kiro/skills/explore')));
 });
 test('命令参数及当前系统薄入口', (t) => {
   const home = temporary(t);
@@ -123,4 +124,22 @@ test('命令参数及当前系统薄入口', (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /dry-run/);
   assert.ok(!fs.existsSync(path.join(home, 'isolated')));
+});
+
+test('第二个 Skill 冲突时整组安装与卸载均保持原样', (t) => {
+  const home = temporary(t);
+  const directory = path.join(home, '.config/opencode/skills');
+  const explore = path.join(directory, 'explore');
+  fs.mkdirSync(explore, { recursive: true });
+  fs.writeFileSync(path.join(explore, 'user.txt'), '用户内容');
+  assert.throws(() => run(home, 'opencode'), /拒绝/);
+  assert.ok(!fs.existsSync(path.join(directory, 'bridge')));
+  assert.equal(fs.readFileSync(path.join(explore, 'user.txt'), 'utf8'), '用户内容');
+  fs.rmSync(explore, { recursive: true });
+  run(home, 'opencode');
+  fs.unlinkSync(explore);
+  fs.mkdirSync(explore);
+  assert.throws(() => run(home, 'opencode', { uninstall: true }), /拒绝/);
+  assert.ok(fs.lstatSync(path.join(directory, 'bridge')).isSymbolicLink());
+  assert.ok(fs.lstatSync(explore).isDirectory());
 });

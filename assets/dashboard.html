@@ -8,12 +8,13 @@
 </head>
 <body>
   <header class="topbar">
+    <button class="tool-button mobile-nav" id="mobile-nav" title="切换主题导航" aria-expanded="false" aria-controls="sidebar">☰</button>
     <a class="brand" href="?view=base" aria-label="Bridge 基础文件树"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24"><path d="M4 18h16M6 18V9m12 9V9M3 9h18M6 9a6 6 0 0 1 12 0"/></svg></span><span class="brand-name">Bridge</span></a>
     <div class="repo-title"><h1 id="repo-name"></h1><span class="badge mono" id="repo-commit"></span></div>
     <div class="top-actions"><span class="badge" id="repo-count"></span><a class="open-repo" data-open-path="" href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>在 VS Code 打开仓库</a></div>
   </header>
   <div class="layout" id="layout">
-    <aside class="sidebar"><label class="search topic-search"><input id="topic-search" aria-label="搜索探索主题" placeholder="搜索主题、摘要或关键词…"></label><nav class="view-list" id="view-list"></nav><div class="sidebar-section"><p class="eyebrow">文件分类</p><div class="legend" id="legend"></div></div><p class="sidebar-note">结构视图用于定位代码与理解职责；调用视图按阶段呈现运行主线和注释源码。</p></aside>
+    <aside class="sidebar" id="sidebar"><label class="search topic-search"><input id="topic-search" aria-label="搜索探索主题" placeholder="搜索主题、摘要或关键词…"></label><nav class="view-list" id="view-list"></nav><div class="sidebar-section"><p class="eyebrow">文件分类</p><div class="legend" id="legend"></div></div><p class="sidebar-note">结构视图用于定位代码与理解职责；调用视图按阶段呈现运行主线和注释源码。</p></aside>
     <main class="workspace">
       <div class="workspace-head">
         <div class="workspace-title"><h2 id="workspace-title">仓库文件树</h2><span class="file-count" id="file-count"></span></div>

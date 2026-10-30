@@ -99,6 +99,8 @@ async function start() {
     }
     async function selectView(id){
       const selected=viewById(id);if(!selected)return;
+      document.getElementById('sidebar').classList.remove('mobile-open');
+      document.getElementById('mobile-nav').setAttribute('aria-expanded','false');
       if(state.view==='base'){state.treeSearch=state.search;state.treeScroll=document.getElementById('tree-scroll').scrollTop;}
       const token=++requestId;
       state.view=id;state.expand=false;state.expandedCode.clear();
@@ -137,6 +139,7 @@ async function start() {
       renderContent();
     });
     document.getElementById('topic-search').addEventListener('input',event=>{state.topicSearch=event.target.value.trim();renderShell()});
+    document.getElementById('mobile-nav').addEventListener('click',()=>{const open=document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('mobile-nav').setAttribute('aria-expanded',String(open));});
     document.getElementById('mobile-inspector').addEventListener('click',openInspector);
     document.getElementById('inspector-close').addEventListener('click',()=>{state.inspectorOpen=false;document.getElementById('inspector').classList.remove('open')});
     const requested=new URLSearchParams(location.search).get('view');

@@ -10,3 +10,6 @@
     @media(max-width:1120px){.layout{grid-template-columns:190px minmax(450px,1fr)}.inspector{display:none;position:fixed;z-index:30;right:0;top:64px;bottom:0;width:min(480px,92vw);box-shadow:-10px 0 35px #1f293725;border-left:1px solid var(--line)}.inspector.open{display:block}.mobile-inspector{display:grid}.inspector-close{display:grid;position:sticky;top:8px;margin-left:auto;right:8px;z-index:2;background:#fff}.file-summary{max-width:210px}}@media(max-width:720px){.topbar{padding:0 13px}.brand{padding-right:10px}.brand-name,.top-actions .badge{display:none}.layout{display:block;height:auto}.sidebar{display:none}.workspace{height:calc(100vh - 64px)}.workspace-head{padding:13px}.tree{min-width:500px}.repo-title .badge{display:none}.inspector{top:64px}.open-repo{font-size:0}.open-repo .icon{width:19px;height:19px}}
   
 .topic-search{margin-bottom:14px;flex:none}.view-list{overflow:auto}
+
+.mobile-nav{display:none}
+@media(max-width:720px){.mobile-nav{display:grid;flex:none}.sidebar.mobile-open{display:block;position:fixed;z-index:40;top:64px;bottom:0;left:0;width:min(300px,90vw);box-shadow:8px 0 30px #1f293725}.sidebar.mobile-open .sidebar-note{margin-bottom:20px}}
