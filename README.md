@@ -46,21 +46,29 @@ codex plugin add bridge@bridge-marketplace
 
 客户端会直接从 [GitHub 仓库](https://github.com/ShirlyTaylor73/Bridge) 获取插件。
 
-安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，0.2.0 实际验证范围见 [验收记录](docs/bridge_explore_validation.md)。
+安装后在待分析仓库开启新会话，要求“使用 Bridge 插件分析当前仓库”。完整客户端列表、原生安装命令及兼容脚本见 [安装说明](docs/installation.md)，实际验证范围见 [验收记录](docs/bridge_explore_validation.md)。
 
 开发检查：`npm run check`；隔离测试：`npm test`。无需安装 npm 依赖。
 
-## 0.2.0：建立概览，再按主题探索
+## 使用 Bridge
 
-在目标仓库的新会话中：
+Bridge 提供两个 Skill，分别负责建立仓库概览和开展主题探索。首次使用时，在**目标仓库**的新会话中运行：
 
-1. **建立概览**：“使用 Bridge 的 bridge Skill 建立当前仓库的文件树和职责概览。”
-2. **新增主题**：“使用 Bridge 的 explore Skill，调研训练脚本从数据加载到训练循环的整体关系。”
-3. **深化主题**：“继续深化 training-pipeline，补充训练循环中的异常处理。”
+```text
+使用 Bridge 的 bridge Skill 建立当前仓库的文件树和职责概览。
+```
 
-支持命名空间命令的客户端可使用 `/bridge:bridge`、`/bridge:explore`；Kimi 对应 `/skill:bridge:bridge`、`/skill:bridge:explore`。具体入口见安装说明。
+`bridge` 会生成基础文件树并初始化 Dashboard。概览已经存在时，再次调用会复用已有数据；只有明确要求刷新概览时才重新扫描。
 
-探索使用中文标题与语义文件名，例如 `explorations/training-pipeline.json`。Agent 先查主题索引；相似主题意图不明确时请你选择，明确追问沿用原文件。新增探索保持基础树、页面资产和旧主题原样；显式更新会备份该主题。再次调用 bridge 默认打开已有页面，刷新概览需明确提出。
+完成初始化后，使用 `explore` 调研具体的调用关系或架构问题：
+
+```text
+使用 Bridge 的 explore Skill，调研训练脚本从数据加载到训练循环的整体关系。
+```
+
+`explore` 会先读取主题索引。新问题会新增一个使用语义命名的主题，例如 `training-pipeline`；明确追问已有主题时沿用原主题并备份旧结果。相似主题无法判断是否延续时，会列出候选供选择。新增主题只写入自己的结果和索引，不修改基础树、页面资产或其他主题。
+
+支持命名空间命令的客户端可使用 `/bridge:bridge`、`/bridge:explore`；Kimi 对应 `/skill:bridge:bridge`、`/skill:bridge:explore`。
 
 页面通过本地 HTTP 服务查看，Skill 会提供访问地址。也可手动启动：
 
@@ -69,4 +77,4 @@ node /path/to/Bridge/scripts/serve-dashboard.mjs /path/to/target-repository
 # 固定端口可追加 --port 8765
 ```
 
-服务仅绑定 `127.0.0.1`，默认自动选择端口。页面刷新后读取主题索引，选择主题时加载独立结果。本版使用全新初始化的 `.bridge/`；旧版报告可先移到其他目录保留。
+服务仅绑定 `127.0.0.1`，默认自动选择端口。页面刷新后读取主题索引，选择主题时按需加载独立结果。
