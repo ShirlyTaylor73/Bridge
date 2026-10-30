@@ -3,18 +3,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkPackage } from '../scripts/check-package.mjs';
+import { publishBase } from '../scripts/publish-base.mjs';
 import { temporary, copyPackage, node, fixture } from './helpers.mjs';
 
-test('独立插件副本在另一个工作目录中分析外部仓库', (t) => {
+test('独立插件副本在另一个工作目录中分析外部仓库', async (t) => {
   const root = temporary(t);
   const plugin = copyPackage(path.join(root, '插件副本'));
   checkPackage(plugin);
   const target = path.join(root, '目标仓库');
-  const scripts = path.join(plugin, 'skills/bridge/scripts');
+  const scripts = path.join(plugin, 'scripts');
   fixture(target, scripts);
-  node([path.join(scripts, 'validate-analysis.mjs'), target], plugin);
-  node([path.join(scripts, 'render-dashboard.mjs'), target], root);
-  assert.ok(fs.readFileSync(path.join(target, '.bridge/index.html'), 'utf8').includes('问候入口'));
+  node([path.join(scripts, 'publish-base.mjs'), target, path.join(target,'.bridge/work/tree.json')], plugin);
+  assert.ok(fs.readFileSync(path.join(target, '.bridge/index.html'), 'utf8').includes('assets/dashboard.js'));
   assert.ok(!fs.existsSync(path.join(plugin, '.bridge')));
 });
 test('声明版本漂移和包外资源被拒绝', (t) => {

@@ -11,7 +11,7 @@ export function temporary(t) {
 }
 export function copyPackage(target) {
   fs.mkdirSync(target, { recursive: true });
-  for (const name of ['plugin.json', 'package.json', 'kimi.plugin.json', 'gemini-extension.json', '.claude-plugin', '.codex-plugin', '.copilot-plugin', '.agents/plugins', 'skills', 'scripts', 'install.sh', 'install.ps1']) {
+  for (const name of ['plugin.json', 'package.json', 'kimi.plugin.json', 'gemini-extension.json', '.claude-plugin', '.codex-plugin', '.copilot-plugin', '.agents/plugins', 'skills', 'scripts', 'assets', 'references', 'install.sh', 'install.ps1']) {
     fs.cpSync(path.join(packageRoot, name), path.join(target, name), { recursive: true });
   }
   return target;
@@ -23,16 +23,32 @@ export function node(args, cwd) {
 }
 export function fixture(root, scripts) {
   fs.mkdirSync(root, { recursive: true });
-  fs.writeFileSync(path.join(root, 'main.js'), 'function greet() { return "hello"; }\ngreet();\n');
-  node([path.join(scripts, 'scan-repository.mjs'), root], os.tmpdir());
-  const scan = JSON.parse(fs.readFileSync(path.join(root, '.bridge/scan.json')));
-  const data = {
-    version: 1,
-    project: { name: '独立测试仓库', ...scan.project, generatedAt: '2026-01-01T00:00:00Z', fileCount: scan.files.length },
-    nodes: [{ id: 'file:main.js', name: 'main.js', path: 'main.js', kind: 'file', summary: '定义问候函数并从模块入口调用。', category: 'core', entry: '主入口' }],
-    evidence: { entry: { path: 'main.js', role: '调用点', symbol: 'greet()', start: 1, end: 2, highlight: [2, 2], code: 'function greet() { return "hello"; }\ngreet();', annotation: '模块加载后调用问候函数。' } },
-    views: [{ id: 'cli', name: '问候入口', desc: '模块执行过程', icon: 'play', phases: [{ title: '执行', desc: '启动调用', steps: [{ key: 'entry' }] }] }],
+  fs.mkdirSync(path.join(root, 'src/nested'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'src/nested/main.js'), 'function greet() { return "hello"; }\ngreet();\n');
+  node([path.join(scripts, 'scan-repository.mjs'), root]);
+  const scan = JSON.parse(fs.readFileSync(path.join(root, '.bridge/work/scan.json')));
+  const tree = {
+    version: 2,
+    project: { name: '独立测试仓库', ...scan.project, generatedAt: '2026-10-30T00:00:00Z', fileCount: scan.files.length },
+    nodes: [{ id:'dir:src',name:'src',path:'src',kind:'dir',summary:'源代码',open:true,children:[
+      {id:'dir:src/nested',name:'nested',path:'src/nested',kind:'dir',summary:'问候模块',children:[
+        {id:'file:src/nested/main.js',name:'main.js',path:'src/nested/main.js',kind:'file',summary:'定义并调用问候函数。',category:'core',entry:'主入口'}
+      ]}
+    ]}],
   };
-  fs.writeFileSync(path.join(root, '.bridge/analysis.json'), JSON.stringify(data));
-  return data;
+  fs.writeFileSync(path.join(root, '.bridge/work/tree.json'), JSON.stringify(tree));
+  return tree;
+}
+export function exploration(root, id = 'greeting-pipeline') {
+  return {
+    version:2, id, title:'问候整体流程', summary:'模块入口到函数调用', keywords:['问候','调用'],question:'问候入口如何执行？',
+    project:{root:fs.realpathSync(root),commit:null,generatedAt:'2026-10-30T00:00:00Z'},
+    evidence:{entry:{path:'src/nested/main.js',role:'调用点',symbol:'greet()',start:1,end:2,highlight:[2,2],code:'function greet() { return "hello"; }\ngreet();',annotation:'模块加载时执行函数。'}},
+    phases:[{title:'入口',desc:'开始执行',steps:[{key:'entry'}]}],
+  };
+}
+export function candidate(root, data) {
+  const file=path.join(root,'.bridge/work',`${data.id}-candidate.json`);
+  fs.writeFileSync(file,JSON.stringify(data));
+  return file;
 }

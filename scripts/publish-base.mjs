@@ -28,7 +28,7 @@ export async function publishBase(directory, candidate, { refresh = false, upgra
     return '基础树/页面已发布';
   });
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   const args = process.argv.slice(2), flags = args.filter(arg => arg.startsWith('--')), positional = args.filter(arg => !arg.startsWith('--'));
   try {
     if (!positional[0] || positional.length > 2 || flags.some(flag => !['--refresh', '--upgrade-page'].includes(flag))) throw new Error('用法：node publish-base.mjs <仓库> [候选 JSON] [--refresh] [--upgrade-page]');

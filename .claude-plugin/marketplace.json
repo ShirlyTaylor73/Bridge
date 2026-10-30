@@ -7,7 +7,7 @@
     {
       "name": "bridge",
       "source": "./",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "基于源码证据理解仓库结构与调用流程，生成可交互的静态 HTML 报告。"
     }
   ]

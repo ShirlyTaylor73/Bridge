@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bridge · 仓库理解</title>
+  <link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="?view=base" aria-label="Bridge 基础文件树"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24"><path d="M4 18h16M6 18V9m12 9V9M3 9h18M6 9a6 6 0 0 1 12 0"/></svg></span><span class="brand-name">Bridge</span></a>
+    <div class="repo-title"><h1 id="repo-name"></h1><span class="badge mono" id="repo-commit"></span></div>
+    <div class="top-actions"><span class="badge" id="repo-count"></span><a class="open-repo" data-open-path="" href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7-9 9"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>在 VS Code 打开仓库</a></div>
+  </header>
+  <div class="layout" id="layout">
+    <aside class="sidebar"><label class="search topic-search"><input id="topic-search" aria-label="搜索探索主题" placeholder="搜索主题、摘要或关键词…"></label><nav class="view-list" id="view-list"></nav><div class="sidebar-section"><p class="eyebrow">文件分类</p><div class="legend" id="legend"></div></div><p class="sidebar-note">结构视图用于定位代码与理解职责；调用视图按阶段呈现运行主线和注释源码。</p></aside>
+    <main class="workspace">
+      <div class="workspace-head">
+        <div class="workspace-title"><h2 id="workspace-title">仓库文件树</h2><span class="file-count" id="file-count"></span></div>
+        <div class="view-meta" id="view-meta"></div>
+        <div class="distribution" id="distribution" aria-label="文件分类分布"></div>
+        <div class="toolbar"><label class="search"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="search" placeholder="在当前视角搜索…"></label><button class="tool-button" id="expand" title="展开或收起目录"><svg class="icon" viewBox="0 0 24 24"><path d="m7 9 5 5 5-5"/></svg></button><button class="tool-button mobile-inspector" id="mobile-inspector" title="查看文件职责"><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></button></div>
+        <div class="relation-status" id="relation-status"></div>
+      </div>
+      <div class="tree-scroll" id="tree-scroll"><div class="tree" id="tree"><div id="tree-content"></div></div></div>
+      <div class="flow-scroll" id="flow-scroll"><div class="flow-canvas" id="flow-canvas"></div></div>
+    </main>
+    <aside class="inspector" id="inspector"><button class="tool-button inspector-close" id="inspector-close" title="关闭文件面板">×</button><div class="inspector-inner" id="inspector-inner"></div></aside>
+  </div>
+  <script type="module" src="assets/dashboard.js"></script>
+</body>
+</html>

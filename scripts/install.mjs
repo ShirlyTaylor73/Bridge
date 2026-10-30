@@ -49,7 +49,9 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     return;
   }
   home = path.resolve(home);
-  const target = path.join(home, platform.directory, 'bridge');
+  const names = ['bridge', 'explore'];
+  const targets = names.map(name => path.join(home, platform.directory, name));
+  const target = targets[0];
   const stateDirectory = path.join(home, '.bridge', 'installations');
   const statePath = path.join(stateDirectory, `${platform.id}.json`);
   const agentPath = path.join(home, '.kiro', 'agents', 'bridge.json');
@@ -69,27 +71,29 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     if (stat(statePath)) {
       if (!stat(statePath).isFile() || stat(statePath).isSymbolicLink()) throw new Error(`安装记录不是普通文件：${statePath}`);
       state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-      if (state.version !== 1 || state.platform !== platform.id || state.target !== target
-        || typeof state.source !== 'string' || !path.isAbsolute(state.source)
+      if (state.version !== 2 || state.platform !== platform.id || !Array.isArray(state.links) || state.links.length !== 2
+        || state.links.some((link, i) => link.target !== targets[i] || typeof link.source !== 'string' || !path.isAbsolute(link.source))
         || (platform.id === 'kiro' && (state.agent?.path !== agentPath || typeof state.agent.sha256 !== 'string'))) {
-        throw new Error(`安装记录损坏，拒绝修改：${statePath}`);
+        throw new Error(`安装记录损坏或来自旧版本，请先用旧安装器卸载：${statePath}`);
       }
     }
-    const existing = stat(target);
-    if (existing && (!state || !existing.isSymbolicLink() || linkTarget(target) !== state.source)) {
-      throw new Error(`拒绝覆盖或删除非本工具管理的入口：${target}`);
-    }
+    const existing = targets.map(stat);
+    targets.forEach((file, i) => {
+      if (existing[i] && (!state || !existing[i].isSymbolicLink() || linkTarget(file) !== state.links[i].source)) {
+        throw new Error(`拒绝覆盖或删除非本工具管理的入口：${file}`);
+      }
+    });
     if (platform.id === 'kiro' && stat(agentPath)) {
       if (!state || !stat(agentPath).isFile() || stat(agentPath).isSymbolicLink()
         || hash(fs.readFileSync(agentPath)) !== state.agent.sha256) {
         throw new Error(`Kiro agent 已存在或已被用户修改，拒绝覆盖：${agentPath}`);
       }
     }
-    const removeLink = () => {
-      if (!existing) return;
-      const old = fs.readlinkSync(target);
-      fs.unlinkSync(target);
-      undo.push(() => fs.symlinkSync(old, target, process.platform === 'win32' ? 'junction' : 'dir'));
+    const removeLink = (i) => {
+      if (!existing[i]) return;
+      const file = targets[i], old = fs.readlinkSync(file);
+      fs.unlinkSync(file);
+      undo.push(() => fs.symlinkSync(old, file, process.platform === 'win32' ? 'junction' : 'dir'));
     };
     const removeAgent = () => {
       if (platform.id !== 'kiro' || !stat(agentPath)) return;
@@ -101,7 +105,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
       if (!state) { log('未登记安装，无需卸载。'); return; }
       log(`${options['dry-run'] ? '[dry-run] ' : ''}卸载 ${platform.id}：${target}`);
       if (options['dry-run']) return;
-      removeLink();
+      targets.forEach((_, i) => removeLink(i));
       removeAgent();
       fs.unlinkSync(statePath);
       undo.length = 0;
@@ -109,23 +113,25 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     }
     const sourceRoot = fs.realpathSync(path.resolve(options.source || packageRoot));
     checkPackage(sourceRoot);
-    const source = fs.realpathSync(path.join(sourceRoot, 'skills', 'bridge'));
+    const sources = names.map(name => fs.realpathSync(path.join(sourceRoot, 'skills', name)));
+    const source = sources[0];
     const agent = `${JSON.stringify({
       name: 'bridge', description: '使用 Bridge Skill 理解仓库并生成静态 HTML 报告。',
-      prompt: '使用 bridge Skill 完成用户指定的仓库分析；只向目标仓库 .bridge 写入分析产物。',
+      prompt: '使用 bridge 建立文件树，使用 explore 按主题探索调用关系；只向目标仓库 .bridge 写入分析产物。',
       tools: ['read', 'write', 'shell'],
-      resources: [`skill://${path.join(target, 'SKILL.md').replaceAll('\\', '/')}`],
+      resources: targets.map(file => `skill://${path.join(file, 'SKILL.md').replaceAll('\\', '/')}`),
     }, null, 2)}\n`;
-    const next = { version: 1, platform: platform.id, target, source,
+    const next = { version: 2, platform: platform.id, links: targets.map((file, i) => ({ target: file, source: sources[i] })),
       ...(platform.id === 'kiro' ? { agent: { path: agentPath, sha256: hash(agent) } } : {}) };
     log(`${options['dry-run'] ? '[dry-run] ' : ''}安装 ${platform.id}：${target} → ${source}`);
     if (options['dry-run']) return;
-    if (!existing || linkTarget(target) !== source) {
-      removeLink();
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
-      undo.push(() => fs.unlinkSync(target));
-    }
+    targets.forEach((file, i) => {
+      if (existing[i] && linkTarget(file) === sources[i]) return;
+      removeLink(i);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.symlinkSync(sources[i], file, process.platform === 'win32' ? 'junction' : 'dir');
+      undo.push(() => fs.unlinkSync(file));
+    });
     if (platform.id === 'kiro') {
       removeAgent();
       fs.mkdirSync(path.dirname(agentPath), { recursive: true });
@@ -136,7 +142,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     fs.writeFileSync(temporary, `${JSON.stringify(next, null, 2)}\n`, { flag: 'wx' });
     fs.renameSync(temporary, statePath);
     undo.length = 0;
-    log('安装完成；重启客户端后使用 Bridge。');
+    log('bridge 与 explore 安装完成；重启客户端后使用。');
   } catch (error) {
     for (const rollback of undo.reverse()) {
       try { rollback(); } catch (rollbackError) { log(`回滚失败：${rollbackError.message}`); }
@@ -147,7 +153,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   try {
     install(parseArgs(process.argv.slice(2)), { home: process.env.BRIDGE_INSTALL_HOME || os.homedir() });
   } catch (error) {

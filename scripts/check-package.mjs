@@ -43,10 +43,12 @@ export function checkPackage(directory = packageRoot) {
     assert.equal(inside(typeof source === 'string' ? source : source.path), root);
     if (data.plugins[0].version) assert.equal(data.plugins[0].version, manifest.version);
   }
-  const skill = fs.readFileSync(inside('./skills/bridge/SKILL.md'), 'utf8');
-  assert.match(skill, /^---\r?\nname: bridge\r?\ndescription: .+\r?\n---/);
-  for (const name of ['scripts/scan-repository.mjs', 'scripts/validate-analysis.mjs', 'scripts/render-dashboard.mjs', 'assets/dashboard.html', 'references/analysis-workflow.md', 'references/data-contract.md', 'references/prototype-contract.md']) {
-    assert.ok(fs.statSync(inside(`./skills/bridge/${name}`)).isFile());
+  for (const name of ['bridge', 'explore']) {
+    const skill = fs.readFileSync(inside(`./skills/${name}/SKILL.md`), 'utf8');
+    assert.ok(skill.startsWith(`---\nname: ${name}\ndescription: `), `${name}: frontmatter`);
+  }
+  for (const name of ['scripts/scan-repository.mjs', 'scripts/publish-base.mjs', 'scripts/publish-exploration.mjs', 'scripts/serve-dashboard.mjs', 'assets/dashboard.html', 'assets/dashboard.css', 'assets/dashboard.js', 'references/analysis-workflow.md', 'references/data-contract.md', 'references/prototype-contract.md']) {
+    assert.ok(fs.statSync(inside(`./${name}`)).isFile());
   }
   assert.ok(!fs.existsSync(path.join(root, '.agents/skills/bridge')), '旧 Skill 入口必须移除');
   // 宿主声明的任意 ./ 引用均须存在且留在包内。
@@ -58,7 +60,7 @@ export function checkPackage(directory = packageRoot) {
   return manifest;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const manifest = checkPackage(process.argv[2]);
     console.log(`插件声明检查通过：${manifest.name} ${manifest.version}`);

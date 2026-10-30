@@ -34,7 +34,7 @@ export async function serveDashboard(directory, port = 0) {
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   return server;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const [root, flag, value, ...extra] = process.argv.slice(2);
     if (!root || extra.length || (flag && (flag !== '--port' || !value))) throw new Error('用法：node serve-dashboard.mjs <仓库> [--port <端口>]');

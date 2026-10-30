@@ -17,14 +17,20 @@ for (const platform of platforms.filter((item) => item.mode === 'skill-link')) {
     assert.ok(fs.lstatSync(target).isSymbolicLink());
     assert.equal(fs.realpathSync(target), fs.realpathSync(path.join(packageRoot, 'skills/bridge')));
     run(home, platform.id);
+    const explore = path.join(home, platform.directory, 'explore');
+    assert.ok(fs.lstatSync(explore).isSymbolicLink());
+    const skillRoot=fs.realpathSync(path.join(explore,'SKILL.md'));
+    assert.ok(fs.existsSync(path.resolve(path.dirname(skillRoot),'../../scripts/publish-exploration.mjs')));
     if (platform.id === 'kiro') {
       const agent = JSON.parse(fs.readFileSync(path.join(home, '.kiro/agents/bridge.json')));
       assert.equal(agent.name, 'bridge');
       assert.ok(agent.resources[0].endsWith('/bridge/SKILL.md'));
+      assert.ok(agent.resources[1].endsWith('/explore/SKILL.md'));
     }
     run(home, platform.id, { uninstall: true });
     run(home, platform.id, { uninstall: true });
     assert.ok(!fs.existsSync(target));
+    assert.ok(!fs.existsSync(explore));
     assert.ok(fs.existsSync(path.join(packageRoot, 'skills/bridge/SKILL.md')));
   });
 }

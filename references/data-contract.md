@@ -1,26 +1,46 @@
-# Bridge 数据契约
+# Bridge 0.2.0 数据契约
 
-生成 `<仓库>/.bridge/analysis.json`。所有仓库文件路径使用相对根目录的 POSIX 风格 `/`，不能使用绝对路径、`..` 或反斜杠。所有面向读者的说明使用用户语言；代码标识符保持原文。
+所有源码路径相对目标仓库，采用 POSIX `/`，说明使用用户语言。
 
-## 顶层结构
+## 基础树
+
+候选由 bridge 生成；发布至 `.bridge/base/tree.json`：
+
+```json
+{"version":2,"project":{"name":"项目名","root":"仓库真实绝对路径","commit":null,"generatedAt":"2026-10-30T00:00:00Z","fileCount":1},"nodes":[]}
+```
+
+project.root、commit 与当前扫描一致，fileCount 等于扫描文件数。目录与文件职责覆盖完整清单。基础树没有 evidence 和 views。
+
+## 独立探索
+
+候选由 explore 生成；发布至 `.bridge/explorations/<id>.json`：
 
 ```json
 {
-  "version": 1,
-  "project": {
-    "name": "仓库目录名",
-    "root": "解析后的绝对仓库路径",
-    "commit": "完整 Git commit 或 null",
-    "generatedAt": "ISO 8601 时间",
-    "fileCount": 1
-  },
-  "nodes": [],
+  "version": 2,
+  "id": "training-pipeline",
+  "title": "训练整体流程",
+  "summary": "从命令参数到数据加载和训练循环",
+  "keywords": ["训练", "train", "数据加载"],
+  "question": "训练脚本如何组织整体调用关系？",
+  "project": {"root":"仓库真实绝对路径","commit":null,"generatedAt":"2026-10-30T00:00:00Z"},
   "evidence": {},
-  "views": []
+  "phases": []
 }
 ```
 
-`root`、`commit` 和 `fileCount` 必须与扫描结果一致，其中 `fileCount` 也必须等于文件节点数。目标不是 Git 工作树根目录时 `commit` 为 `null`，不能继承外层仓库或根据归档来源猜测 commit。不得收录原型中的示例文件数。
+ID 使用有语义的英文 kebab-case，最长 80 字符，避开 base、index。每个文件是一份自包含主题；没有 nodes、views 或 fileCount。phases 与 evidence 规则见下文。commit/root 来自本次扫描，时间使用实际 ISO 时间。同名证据可在不同主题独立使用。
+
+## 索引与更新
+
+`.bridge/explorations/index.json`：`{"version":2,"topics":[{"id":"training-pipeline","title":"训练整体流程","summary":"…","keywords":["训练"],"path":"explorations/training-pipeline.json","updatedAt":"ISO 时间"}]}`。
+
+发布脚本维护索引；Agent 只写候选。新主题新增文件，更新使用 `--update --expected-hash <旧主题SHA256>`，保留 ID 并备份原内容到 history/<id>/。源码校验只覆盖当前候选。
+
+## 扫描
+
+`scan-repository.mjs` 默认写 `.bridge/work/scan.json`，也可显式指定当前主题的工作文件。扫描输出包含 version、project、files、directories、warnings、excluded。只读取保留文件；发布时重新扫描，以实际文件验证本次候选。扫描独立于旧探索数据。
 
 ## 文件树节点
 
@@ -44,7 +64,7 @@
 - 文件 `category` 只能是 `core`、`adapter`、`data`、`infra`、`utility`、`test`、`docs`。依次表示核心业务、接口适配、数据模型、基础设施、通用工具、测试、文档。选择主要角色，不新增分类。
 - `entry` 仅用于真实入口，使用“主入口”“HTTP 入口”“前端入口”等短标签；没有入口时省略。
 - 目录可设 `open: true` 让首层默认展开。不要为目录设置 `category` 或 `entry`。
-- 文件树必须精确覆盖 `scan.json.files`，不能遗漏、添加或重复路径。
+- 基础文件树必须精确覆盖 `本次 scan.json.files`，不能遗漏、添加或重复路径。
 
 ## 代码证据
 
@@ -72,7 +92,9 @@
 - `annotation` 是独立 Agent 注释，解释对象来源、调用目的、参数、并发或资源语义，不修改源码，不逐行复述。
 - 每份证据至少被一个步骤或 `extra` 引用。适量截取能帮助理解的连续源码，不把整个大文件嵌入报告。
 
-## 调用视图
+## 探索阶段与步骤
+
+以下是内部视图结构示意；独立探索文件只采用其中的 `phases`，主题标题等使用上方字段。
 
 ```json
 {
@@ -108,6 +130,3 @@
 - `extra` 是附加证据 key 数组。回调步骤必须提供绑定位置；目标定义应在相邻步骤或附加证据中出现。
 - HTTP 客户端、路由和 SSE 应是不同证据位置，不把 URL 字符串当作普通函数调用。
 
-## scan.json
-
-扫描器生成 `version`、`project.root`、`project.commit`、`files`、`directories`、`warnings` 和 `excluded`。只有目标本身是 Git 工作树根目录时记录其 HEAD；其他情况 `commit` 为 `null`。分析者只消费清单，不手工修改扫描结果来掩盖漏文件。源码在扫描后发生变化时重新扫描并复核证据。
