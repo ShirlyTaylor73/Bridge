@@ -1,0 +1,3 @@
+interface:
+  display_name: "代码分块与注释整理"
+  short_description: "按功能块整理复杂函数，补充块说明与行内注释，保留空行和执行语义"
