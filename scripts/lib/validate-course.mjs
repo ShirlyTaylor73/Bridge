@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { normalizeRelative, readSourceText } from './validate-analysis.mjs';
 import { topicPattern, readIndex, readJson, safeOutput, digest } from './storage.mjs';
@@ -19,54 +21,64 @@ export const splitLines = text => {
   return lines;
 };
 
-// 解析单文件、多 hunk 的 unified diff；格式错误直接抛出。
+// 解析 unified diff：可含多个文件，每个文件为修改已有文件或新建文件（--- /dev/null），可有多个 hunk；格式错误直接抛出。
 export function parseUnifiedDiff(text) {
   if (!isText(text)) throw new Error('diff 必须为非空文本');
   const lines = splitLines(text);
+  const files = [];
   let index = 0;
-  while (index < lines.length && /^(diff --git |index )/.test(lines[index])) index += 1;
   const header = (marker, prefix) => {
     const line = lines[index++];
-    if (!line?.startsWith(`${marker} ${prefix}`)) throw new Error(`diff 需要 "${marker} ${prefix}<路径>" 文件头（只支持修改已有的单个文件）`);
-    return line.slice(marker.length + 1 + prefix.length).split('\t')[0];
+    const value = line?.startsWith(`${marker} `) ? line.slice(marker.length + 1).split('\t')[0] : null;
+    if (value === '/dev/null') return null;
+    if (!value?.startsWith(prefix)) throw new Error(`diff 需要 "${marker} ${prefix}<路径>" 文件头（新建文件的旧文件头为 /dev/null）`);
+    return value.slice(prefix.length);
   };
-  const oldPath = header('---', 'a/'), newPath = header('+++', 'b/');
-  if (oldPath !== newPath) throw new Error('diff 不支持重命名，两个文件头路径须一致');
-  const hunks = [];
-  let delta = 0, previousEnd = 0;
   while (index < lines.length) {
-    const match = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?$/.exec(lines[index]);
-    if (!match) {
-      if (/^(diff --git |--- )/.test(lines[index])) throw new Error('diff 只支持单个文件');
-      throw new Error(`diff 第 ${index + 1} 行应为 hunk 头；请检查 hunk 行数与头部是否一致`);
+    while (index < lines.length && /^(diff --git |index |new file mode )/.test(lines[index])) index += 1;
+    const oldPath = header('---', 'a/'), newPath = header('+++', 'b/');
+    if (newPath === null) throw new Error('diff 不支持删除文件');
+    if (oldPath !== null && oldPath !== newPath) throw new Error('diff 不支持重命名，两个文件头路径须一致');
+    if (files.some(file => file.path === newPath)) throw new Error(`diff 中文件 ${newPath} 重复出现，请合并为一节`);
+    const created = oldPath === null, hunks = [];
+    let delta = 0, previousEnd = 0;
+    while (index < lines.length && !/^(diff --git |--- )/.test(lines[index])) {
+      const match = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?$/.exec(lines[index]);
+      if (!match) throw new Error(`diff 第 ${index + 1} 行应为 hunk 头；请检查 hunk 行数与头部是否一致`);
+      index += 1;
+      const [oldStart, oldCount, newStart, newCount] = [match[1], match[2] ?? '1', match[3], match[4] ?? '1'].map(Number);
+      const name = `diff 中 ${newPath} 的第 ${hunks.length + 1} 个 hunk`;
+      if (created) {
+        if (hunks.length || oldStart !== 0 || oldCount !== 0 || newStart !== 1 || newCount < 1) throw new Error(`${name}：新建文件只能有一个 @@ -0,0 +1,<行数> @@ hunk`);
+      } else {
+        if (oldStart < 1 || oldCount < 1) throw new Error(`${name} 至少需要一行上下文或删除行来对应磁盘内容`);
+        if (oldStart <= previousEnd) throw new Error(`${name} 顺序错误或与前一个 hunk 重叠`);
+        if (newStart !== oldStart + delta - (newCount === 0 ? 1 : 0)) throw new Error(`${name} 的新文件起始行号与前文增删行数不一致`);
+      }
+      const body = [];
+      let oldLeft = oldCount, newLeft = newCount, changed = false;
+      while (oldLeft > 0 || newLeft > 0 || lines[index]?.startsWith('\\')) {
+        const line = lines[index++];
+        if (line === undefined) throw new Error(`${name} 行数少于头部声明`);
+        if (line.startsWith('\\')) continue;
+        const tag = line[0];
+        if (![' ', '+', '-'].includes(tag)) throw new Error(`${name} 含无效行（须以空格、+ 或 - 开头，空白上下文行保留前导空格）`);
+        if (tag !== '+') oldLeft -= 1;
+        if (tag !== '-') newLeft -= 1;
+        if (tag !== ' ') changed = true;
+        if (oldLeft < 0 || newLeft < 0) throw new Error(`${name} 行数与头部声明不一致`);
+        body.push({ tag, text: line.slice(1) });
+      }
+      if (!changed) throw new Error(`${name} 没有任何增删行`);
+      hunks.push({ oldStart, oldCount, newStart, newCount, lines: body });
+      previousEnd = oldStart + oldCount - 1;
+      delta += newCount - oldCount;
     }
-    index += 1;
-    const [oldStart, oldCount, newStart, newCount] = [match[1], match[2] ?? '1', match[3], match[4] ?? '1'].map(Number);
-    const name = `diff 第 ${hunks.length + 1} 个 hunk`;
-    if (oldStart < 1 || oldCount < 1) throw new Error(`${name} 至少需要一行上下文或删除行来对应磁盘内容`);
-    if (oldStart <= previousEnd) throw new Error(`${name} 顺序错误或与前一个 hunk 重叠`);
-    if (newStart !== oldStart + delta - (newCount === 0 ? 1 : 0)) throw new Error(`${name} 的新文件起始行号与前文增删行数不一致`);
-    const body = [];
-    let oldLeft = oldCount, newLeft = newCount, changed = false;
-    while (oldLeft > 0 || newLeft > 0 || lines[index]?.startsWith('\\')) {
-      const line = lines[index++];
-      if (line === undefined) throw new Error(`${name} 行数少于头部声明`);
-      if (line.startsWith('\\')) continue;
-      const tag = line[0];
-      if (![' ', '+', '-'].includes(tag)) throw new Error(`${name} 含无效行（须以空格、+ 或 - 开头，空白上下文行保留前导空格）`);
-      if (tag !== '+') oldLeft -= 1;
-      if (tag !== '-') newLeft -= 1;
-      if (tag !== ' ') changed = true;
-      if (oldLeft < 0 || newLeft < 0) throw new Error(`${name} 行数与头部声明不一致`);
-      body.push({ tag, text: line.slice(1) });
-    }
-    if (!changed) throw new Error(`${name} 没有任何增删行`);
-    hunks.push({ oldStart, oldCount, newStart, newCount, lines: body });
-    previousEnd = oldStart + oldCount - 1;
-    delta += newCount - oldCount;
+    if (!hunks.length) throw new Error(`diff 中 ${newPath} 缺少 hunk`);
+    files.push({ path: newPath, created, hunks });
   }
-  if (!hunks.length) throw new Error('diff 缺少 hunk');
-  return { path: oldPath, hunks };
+  if (!files.length) throw new Error('diff 缺少文件');
+  return { files };
 }
 
 // 影响作答与判分的内容；提示、参考位置与验证标记的修订不使掌握记录失效。
@@ -259,16 +271,26 @@ export function validateCourse(root, course, key, { bridge, scan, probes = [], c
   function checkDiff(value, location) {
     let diff;
     try { diff = parseUnifiedDiff(value); } catch (error) { fail(location, error.message); return null; }
-    const lines = sourceLines(diff.path, location);
-    if (!lines) return null;
-    for (const hunk of diff.hunks) {
-      let number = hunk.oldStart;
-      for (const line of hunk.lines.filter(item => item.tag !== '+')) {
-        if (lines[number - 1] !== line.text) {
-          fail(location, `上下文或删除行与磁盘不符：${diff.path} 第 ${number} 行`);
-          return null;
+    for (const file of diff.files) {
+      if (file.created) {
+        // 新建文件须是仓库内的合法路径，且当前磁盘上不存在。
+        const pathError = normalizeRelative(file.path);
+        if (pathError) { fail(location, pathError); return null; }
+        if (/^\.(git|bridge)(\/|$)/.test(file.path)) { fail(location, `新建文件不能位于 .git 或 .bridge：${file.path}`); return null; }
+        if (scanFiles.has(file.path) || fs.existsSync(path.join(root, file.path))) { fail(location, `新建文件已存在：${file.path}`); return null; }
+        continue;
+      }
+      const lines = sourceLines(file.path, location);
+      if (!lines) return null;
+      for (const hunk of file.hunks) {
+        let number = hunk.oldStart;
+        for (const line of hunk.lines.filter(item => item.tag !== '+')) {
+          if (lines[number - 1] !== line.text) {
+            fail(location, `上下文或删除行与磁盘不符：${file.path} 第 ${number} 行`);
+            return null;
+          }
+          number += 1;
         }
-        number += 1;
       }
     }
     return diff;
@@ -329,8 +351,9 @@ export function validateCourse(root, course, key, { bridge, scan, probes = [], c
         }
         text(risk.desc, `${riskLocation}.desc`);
         if (!diff) return;
-        if (risk.path !== diff.path) fail(`${riskLocation}.path`, `须等于 diff 文件 ${diff.path}`);
-        if (!Number.isInteger(risk.line) || !diff.hunks.some(hunk => risk.line >= hunk.newStart && risk.line < hunk.newStart + hunk.newCount)) {
+        const file = diff.files.find(item => item.path === risk.path);
+        if (!file) { fail(`${riskLocation}.path`, `须是 diff 中的文件：${diff.files.map(item => item.path).join('、')}`); return; }
+        if (!Number.isInteger(risk.line) || !file.hunks.some(hunk => risk.line >= hunk.newStart && risk.line < hunk.newStart + hunk.newCount)) {
           fail(`${riskLocation}.line`, '须是落在 diff hunk 内的改动后文件行号');
         }
       });

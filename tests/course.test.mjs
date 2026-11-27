@@ -216,18 +216,49 @@ test('无效候选被拒绝且已发布课程保持原样', async t => {
   assert.ok(checkCourse(root, 'swap-backbone').ok);
 });
 
-test('unified diff 解析器限定单文件多 hunk 并核对行数', () => {
-  const diff = parseUnifiedDiff(`diff --git a/src/model.js b/src/model.js\nindex 111..222 100644\n${DIFF}`);
-  assert.equal(diff.path, 'src/model.js');
-  assert.deepEqual(diff.hunks.map(hunk => [hunk.oldStart, hunk.oldCount, hunk.newStart, hunk.newCount]), [[1, 3, 1, 3], [10, 3, 10, 4]]);
-  assert.throws(() => parseUnifiedDiff(`${DIFF}--- a/other.js\n+++ b/other.js\n@@ -1 +1 @@\n-a\n+b\n`), /单个文件/);
-  assert.throws(() => parseUnifiedDiff(DIFF.replace('@@ -1,3 +1,3 @@', '@@ -1,4 +1,4 @@')), /无效行|行数/);
+const NEW_FILE = '--- /dev/null\n+++ b/src/block.js\n@@ -0,0 +1,2 @@\n+export const block = x => x;\n+export default block;\n';
+
+test('unified diff 解析器支持多文件、新建文件与多 hunk 并核对行数', () => {
+  const diff = parseUnifiedDiff(`diff --git a/src/model.js b/src/model.js\nindex 111..222 100644\n${DIFF}diff --git a/src/block.js b/src/block.js\nnew file mode 100644\n${NEW_FILE}`);
+  assert.deepEqual(diff.files.map(file => [file.path, file.created]), [['src/model.js', false], ['src/block.js', true]]);
+  assert.deepEqual(diff.files[0].hunks.map(hunk => [hunk.oldStart, hunk.oldCount, hunk.newStart, hunk.newCount]), [[1, 3, 1, 3], [10, 3, 10, 4]]);
+  assert.throws(() => parseUnifiedDiff(`${DIFF}${DIFF}`), /重复出现/);
+  assert.throws(() => parseUnifiedDiff(DIFF.replace('@@ -1,3 +1,3 @@', '@@ -1,4 +1,4 @@')), /无效行|行数|hunk 头/);
   assert.throws(() => parseUnifiedDiff(DIFF.replace('@@ -1,3 +1,3 @@', '@@ -1,2 +1,2 @@')), /hunk 头|行数/);
   assert.throws(() => parseUnifiedDiff(DIFF.replace('@@ -10,3 +10,4 @@', '@@ -2,3 +2,4 @@')), /重叠/);
   assert.throws(() => parseUnifiedDiff(DIFF.replace('@@ -10,3 +10,4 @@', '@@ -10,3 +11,4 @@')), /起始行号/);
-  assert.throws(() => parseUnifiedDiff('--- /dev/null\n+++ b/new.js\n@@ -0,0 +1 @@\n+a\n'), /文件头/);
+  assert.throws(() => parseUnifiedDiff(NEW_FILE.replace('@@ -0,0 +1,2 @@', '@@ -1,0 +1,2 @@')), /新建文件只能/);
+  assert.throws(() => parseUnifiedDiff('--- a/a.js\n+++ /dev/null\n@@ -1 +0,0 @@\n-a\n'), /删除文件/);
   assert.throws(() => parseUnifiedDiff('--- a/a.js\n+++ b/b.js\n@@ -1 +1 @@\n-a\n+b\n'), /重命名/);
   assert.throws(() => parseUnifiedDiff('--- a/a.js\n+++ b/a.js\n@@ -1 +1 @@\n a\n'), /没有任何增删行/);
+  assert.throws(() => parseUnifiedDiff('+++ b/a.js\n@@ -1 +1 @@\n-a\n+b\n'), /文件头/);
+});
+
+test('审查 diff 可跨文件并新建文件，风险可指向其中任一文件', async t => {
+  const root = await setup(t);
+  const data = build(root);
+  data.course.questions['cap-review'].diff = `${DIFF}${NEW_FILE}`;
+  data.key.answers['cap-review'].risks.push({ id: 'unused-block', path: 'src/block.js', line: 1, desc: '新模块未被前向调用' });
+  await publish(root, data);
+  assert.ok(checkCourse(root, 'swap-backbone').ok);
+  for (const [name, mutate, pattern] of [
+    ['新建文件已存在', item => { item.course.questions['cap-review'].diff = `${DIFF}${NEW_FILE.replace('b/src/block.js', 'b/src/nested/main.js')}`; }, /新建文件已存在：src\/nested\/main\.js/],
+    ['新建文件路径逃逸', item => { item.course.questions['cap-review'].diff = `${DIFF}${NEW_FILE.replace('b/src/block.js', 'b/../block.js')}`; }, /逃逸|路径/],
+    ['新建文件位于 .bridge', item => { item.course.questions['cap-review'].diff = `${DIFF}${NEW_FILE.replace('b/src/block.js', 'b/.bridge/block.js')}`; }, /\.git 或 \.bridge/],
+    ['风险文件不在 diff 中', item => { item.key.answers['cap-review'].risks[0].path = 'src/other.js'; }, /须是 diff 中的文件/],
+    ['风险行超出新文件 hunk', item => { item.key.answers['cap-review'].risks.at(-1).line = 3; }, /落在 diff hunk 内/],
+  ]) {
+    const fresh = build(root, 'cross-file');
+    fresh.course.questions['cap-review'].diff = `${DIFF}${NEW_FILE}`;
+    fresh.key.answers['cap-review'].risks.push({ id: 'unused-block', path: 'src/block.js', line: 1, desc: '新模块未被前向调用' });
+    mutate(fresh);
+    await assert.rejects(publish(root, fresh), pattern, name);
+  }
+  // 新建文件在发布后出现于磁盘（例如改动已被实施），课程应报告过期。
+  fs.writeFileSync(path.join(root, 'src/block.js'), 'export default 1;\n');
+  const report = checkCourse(root, 'swap-backbone');
+  assert.equal(report.ok, false);
+  assert.ok(report.staleQuestions.some(item => item.qid === 'cap-review'));
 });
 
 test('更新需要匹配的摘要，成功后备份并只保留仍有效的学习记录', async t => {
