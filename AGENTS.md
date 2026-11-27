@@ -2,13 +2,14 @@
 
 ## 项目结构
 
-Bridge 是仓库理解与可视化分析工具，以多客户端插件交付，提供 bridge 与 explore 两个可移植 Agent Skill。
+Bridge 是仓库理解与可视化分析工具，以多客户端插件交付，提供 bridge、explore、course、tutor 四个可移植 Agent Skill。
 
-- `scripts/`：扫描、数据校验和 HTML 渲染的 Node.js 脚本。
+- `skills/`：`bridge`（仓库概览）、`explore`（主题探索）、`course`（按改动目标出课）、`tutor`（上课与批改）；另有独立的 `organize-code-comments`。
+- `scripts/`：扫描、数据校验、HTML 渲染，以及课程发布、过期检查和进度记录的 Node.js 脚本。
 - `assets/dashboard.html`、`assets/dashboard.css`、`assets/dashboard.js`：实际使用的页面模板。
-- `references/`：分析流程、数据契约和原型约束。
+- `references/`：分析流程、数据契约、原型约束、课程契约和学习设计规则。
 - `prototype/rpent.html`：页面信息架构与交互的参考原型。
-- `docs/`：需求规格与调研；修改功能前阅读 `docs/bridge_explore_spec.md`。
+- `docs/`：需求规格与调研；修改功能前阅读 `docs/bridge_explore_spec.md`；修改课程功能前阅读 `docs/course_tutor_spec.md`。
 - `.bridge/`：扫描、分析和页面生成物，已被 Git 忽略。`tests/` 存放 Node.js 内置测试，根目录 `scripts/` 提供安装器和插件校验。
 
 ## 开发与验证命令
@@ -21,10 +22,13 @@ npm test
 node scripts/scan-repository.mjs /path/to/repo
 node scripts/publish-base.mjs /path/to/repo /path/to/base-candidate.json
 node scripts/publish-exploration.mjs /path/to/repo /path/to/topic-candidate.json
+node scripts/publish-course.mjs /path/to/repo /path/to/course-candidate-dir
+node scripts/check-course.mjs /path/to/repo <course-id>
+node scripts/record-progress.mjs /path/to/repo <course-id> /path/to/event.json
 node scripts/serve-dashboard.mjs /path/to/repo
 ```
 
-扫描生成清单；Agent 按 `references/data-contract.md` 提供候选，发布脚本校验后写入。基础树在 `.bridge/base/`，探索在 `.bridge/explorations/`。主题 ID 使用语义 kebab-case。新增探索只新增主题并更新索引；更新已有主题须提供 `--update --expected-hash <旧文件SHA256>`，由发布器备份。普通探索保持基础数据、页面资产及其他主题原样。页面更新通过显式 `--upgrade-page` 执行。
+扫描生成清单；Agent 按 `references/data-contract.md` 提供候选，发布脚本校验后写入。基础树在 `.bridge/base/`，探索在 `.bridge/explorations/`。主题 ID 使用语义 kebab-case。新增探索只新增主题并更新索引；更新已有主题须提供 `--update --expected-hash <旧文件SHA256>`，由发布器备份。普通探索保持基础数据、页面资产及其他主题原样。页面更新通过显式 `--upgrade-page` 执行。课程在 `.bridge/courses/`，按 `references/course-contract.md` 提供候选；更新课程同样提供 `--update --expected-hash` 并备份，学习进度只由 `record-progress.mjs` 写入。
 
 ## 编码风格与命名
 
@@ -46,4 +50,4 @@ PR 说明问题、行为变化及验证结果；有关联 issue 时附链接，�
 
 默认用中文沟通和编写文档。实质修改必须获得明确授权；具体的“实现”“修复”“修改”请求即为对应范围授权，仅询问原因或讨论方案不构成授权。
 
-多文件新功能先从粗到细澄清需求，保存至 `docs/<topic>_spec.md`，再制定计划；计划后和完成后复核规格。大型产品需求拆成周期并记录于 `docs/<topic>_devcycle.md`。先查本地实现，必要时参考最新官方资料。分析目标仓库时只读取源码，仅向其 `.bridge/` 写入产物，保留扫描排除与失败警告。
+多文件新功能先从粗到细澄清需求，保存至 `docs/<topic>_spec.md`，再制定计划；计划后和完成后复核规格。大型产品需求拆成周期并记录于 `docs/<topic>_devcycle.md`。先查本地实现，必要时参考最新官方资料。分析目标仓库时只读取源码，仅向其 `.bridge/` 写入产物，保留扫描排除与失败警告。运行目标仓库的代码（包括课程探针）需要用户同意：先说明命令、依赖与预计耗时，同意后才编写并运行脚本，输出只写目标 `.bridge/`。
