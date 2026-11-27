@@ -1,8 +1,8 @@
 # 安装与使用 Bridge
 
-Bridge 0.2.0 将 `skills/bridge/` 与 `skills/explore/` 交付给多个客户端，复用插件根目录的脚本和资产。Dashboard 使用本地 HTTP 服务；无需 npm install 或构建。分析脚本和兼容安装器使用 Node.js 22+。先在客户端可执行命令的环境中准备 Node.js。
+Bridge 0.3.0 将 `skills/bridge/`、`skills/explore/`、`skills/course/`、`skills/tutor/` 交付给多个客户端，复用插件根目录的脚本和资产。Dashboard 使用本地 HTTP 服务；无需 npm install 或构建。分析脚本和兼容安装器使用 Node.js 22+。先在客户端可执行命令的环境中准备 Node.js。
 
-原生插件由客户端直接从远程仓库获取，无需手动 clone，也不要求进入 Bridge 仓库。安装完成后，在**要分析的仓库**启动新会话并调用 Bridge。插件名为 `bridge`，两个 Skill 分别为 `bridge` 和 `explore`。
+原生插件由客户端直接从远程仓库获取，无需手动 clone，也不要求进入 Bridge 仓库。安装完成后，在**要分析的仓库**启动新会话并调用 Bridge。插件名为 `bridge`，四个 Skill 分别为 `bridge`、`explore`、`course`、`tutor`。下表“调用”列以前两个为例，`course` 与 `tutor` 按同一命名规则调用。
 
 发布仓库：[ShirlyTaylor73/Bridge](https://github.com/ShirlyTaylor73/Bridge)。以下远程安装命令可直接使用。
 
@@ -35,18 +35,18 @@ git clone "https://github.com/ShirlyTaylor73/Bridge" Bridge
 cd Bridge
 ```
 
-脚本需与仓库配套文件一起保留。每个平台同时安装 bridge、explore 两个入口；下表使用 `{bridge,explore}` 表示两个同级目录，路径相对于用户主目录：
+脚本需与仓库配套文件一起保留。每个平台同时安装 bridge、explore、course、tutor 四个入口；下表使用 `{bridge,explore,course,tutor}` 表示四个同级目录，路径相对于用户主目录：
 
 | 参数 | Skill 入口 |
 | --- | --- |
-| `opencode` | `.config/opencode/skills/{bridge,explore}` |
-| `antigravity` | `.gemini/antigravity/skills/{bridge,explore}` |
-| `vibe` | `.vibe/skills/{bridge,explore}` |
-| `hermes` | `.hermes/skills/{bridge,explore}` |
-| `cline` | `.cline/skills/{bridge,explore}` |
-| `trae` | `.trae/skills/{bridge,explore}` |
-| `nanobot` | `.nanobot/workspace/skills/{bridge,explore}` |
-| `kiro` | `.kiro/skills/{bridge,explore}`，另创建 `.kiro/agents/bridge.json` |
+| `opencode` | `.config/opencode/skills/{bridge,explore,course,tutor}` |
+| `antigravity` | `.gemini/antigravity/skills/{bridge,explore,course,tutor}` |
+| `vibe` | `.vibe/skills/{bridge,explore,course,tutor}` |
+| `hermes` | `.hermes/skills/{bridge,explore,course,tutor}` |
+| `cline` | `.cline/skills/{bridge,explore,course,tutor}` |
+| `trae` | `.trae/skills/{bridge,explore,course,tutor}` |
+| `nanobot` | `.nanobot/workspace/skills/{bridge,explore,course,tutor}` |
+| `kiro` | `.kiro/skills/{bridge,explore,course,tutor}`，另创建 `.kiro/agents/bridge.json` |
 
 macOS / Linux：
 
@@ -70,7 +70,7 @@ Windows PowerShell：
 
 PowerShell 执行策略由本机管理，安装器不修改策略；不能执行入口时可使用等价命令 `node scripts/install.mjs opencode`。
 
-脚本默认安装脚本所在仓库，与启动命令时的工作目录无关。Unix 使用软链接，Windows 使用 junction，所以安装后请保留来源目录。Kiro CLI 选择独立 `bridge` agent 使用两个已注册 Skill。Skill 先解析自身真实路径，再定位共用脚本和资产。
+脚本默认安装脚本所在仓库，与启动命令时的工作目录无关。Unix 使用软链接，Windows 使用 junction，所以安装后请保留来源目录。Kiro CLI 选择独立 `bridge` agent 使用四个已注册 Skill。Skill 先解析自身真实路径，再定位共用脚本和资产。
 
 安装记录位于 `~/.bridge/installations/<platform>.json`。重复安装可安全重跑；有同名目录、其他工具的链接或用户修改过的 Kiro 配置时停止，不覆盖。来源移动后用新的 `--source` 重新安装；卸载也能清理已登记的断链，不删除来源目录。
 
@@ -91,14 +91,14 @@ codex plugin add bridge@bridge-marketplace
 
 ### 旧入口迁移与检查
 
-旧 `.agents/skills/{bridge,explore}` 已移除，不再提供项目内重复发现入口。开发也使用原生安装或兼容脚本。以前手工安装的同名 Skill 需先确认来源再手动移除；安装器不会接管未登记入口。0.2.0 使用全新安装和初始化：升级前保留旧报告目录，兼容脚本用户先用旧安装器卸载旧入口，再使用新安装器成组安装。原生客户端通过自身插件更新机制更新。
+旧 `.agents/skills/{bridge,explore}` 已移除，不再提供项目内重复发现入口。开发也使用原生安装或兼容脚本。以前手工安装的同名 Skill 需先确认来源再手动移除；安装器不会接管未登记入口。从 0.1 升级须全新安装和初始化：升级前保留旧报告目录，兼容脚本用户先用旧安装器卸载旧入口，再使用新安装器成组安装。从 0.2.0 升级到 0.3.0 时，兼容脚本用户更新来源后重新运行同一安装命令即可补齐 `course` 与 `tutor` 入口；目标位置存在同名目录或其他链接时停止，不覆盖。已有的基础树与探索主题可继续使用。原生客户端通过自身插件更新机制更新。
 
 ```sh
 npm run check
 npm test
 ```
 
-`npm run check` 校验声明、版本和包内资源；`npm test` 在临时目录测试安装生命周期与独立包资源定位、探索发布、服务边界。无额外 npm 依赖。三系统 CI 的配置不等于三系统均已实际通过，详见 [0.2.0 验收记录](bridge_explore_validation.md)。
+`npm run check` 校验声明、版本和包内资源；`npm test` 在临时目录测试安装生命周期与独立包资源定位、探索发布、课程发布与进度记录、服务边界。无额外 npm 依赖。三系统 CI 的配置不等于三系统均已实际通过；`bridge` 与 `explore` 的实际运行见 [0.2.0 验收记录](bridge_explore_validation.md)，该记录不覆盖 `course` 与 `tutor`。
 
 ## 参考资料
 
@@ -115,3 +115,15 @@ node /path/to/Bridge/scripts/serve-dashboard.mjs /path/to/target-repository
 ```
 
 路径分别指实际插件目录与分析目标。服务绑定 127.0.0.1，默认自动分配端口，可追加 `--port 8765`。刷新页面读取最新主题；再次运行 bridge 默认复用概览，明确要求刷新才重新分析基础树。
+
+## 出课与上课
+
+`course` 和 `tutor` 要求目标仓库已由 bridge 初始化。调用 `course` 时说明打算让 AI 做的改动，例如“在检测模型中引入 ViT，帮我出课”；确认大纲后生成课程。运行目标代码的探针需要单独同意。之后调用 `tutor` 开始或继续课程。课程与进度位于目标仓库 `.bridge/courses/`，本地服务不提供该目录。
+
+对应脚本通常由 Skill 调用，数据格式见 [课程契约](../references/course-contract.md)：
+
+```sh
+node /path/to/Bridge/scripts/publish-course.mjs /path/to/target-repository /path/to/candidate-dir
+node /path/to/Bridge/scripts/check-course.mjs /path/to/target-repository <课程-id>
+node /path/to/Bridge/scripts/record-progress.mjs /path/to/target-repository <课程-id> /path/to/event.json
+```

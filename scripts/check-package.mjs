@@ -43,11 +43,11 @@ export function checkPackage(directory = packageRoot) {
     assert.equal(inside(typeof source === 'string' ? source : source.path), root);
     if (data.plugins[0].version) assert.equal(data.plugins[0].version, manifest.version);
   }
-  for (const name of ['bridge', 'explore']) {
+  for (const name of ['bridge', 'explore', 'course', 'tutor']) {
     const skill = fs.readFileSync(inside(`./skills/${name}/SKILL.md`), 'utf8');
     assert.ok(skill.startsWith(`---\nname: ${name}\ndescription: `), `${name}: frontmatter`);
   }
-  for (const name of ['scripts/scan-repository.mjs', 'scripts/publish-base.mjs', 'scripts/publish-exploration.mjs', 'scripts/serve-dashboard.mjs', 'assets/dashboard.html', 'assets/dashboard.css', 'assets/dashboard.js', 'references/analysis-workflow.md', 'references/data-contract.md', 'references/prototype-contract.md']) {
+  for (const name of ['scripts/scan-repository.mjs', 'scripts/publish-base.mjs', 'scripts/publish-exploration.mjs', 'scripts/publish-course.mjs', 'scripts/check-course.mjs', 'scripts/record-progress.mjs', 'scripts/serve-dashboard.mjs', 'assets/dashboard.html', 'assets/dashboard.css', 'assets/dashboard.js', 'references/analysis-workflow.md', 'references/data-contract.md', 'references/prototype-contract.md', 'references/course-contract.md', 'references/learning-design.md']) {
     assert.ok(fs.statSync(inside(`./${name}`)).isFile());
   }
   assert.ok(!fs.existsSync(path.join(root, '.agents/skills/bridge')), '旧 Skill 入口必须移除');

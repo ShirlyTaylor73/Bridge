@@ -49,7 +49,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     return;
   }
   home = path.resolve(home);
-  const names = ['bridge', 'explore'];
+  const names = ['bridge', 'explore', 'course', 'tutor'];
   const targets = names.map(name => path.join(home, platform.directory, name));
   const target = targets[0];
   const stateDirectory = path.join(home, '.bridge', 'installations');
@@ -71,15 +71,18 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     if (stat(statePath)) {
       if (!stat(statePath).isFile() || stat(statePath).isSymbolicLink()) throw new Error(`安装记录不是普通文件：${statePath}`);
       state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-      if (state.version !== 2 || state.platform !== platform.id || !Array.isArray(state.links) || state.links.length !== 2
+      // 0.2.0 记录只登记前两个入口，重装时补齐其余入口。
+      if (state.version !== 2 || state.platform !== platform.id || !Array.isArray(state.links) || ![2, names.length].includes(state.links.length)
         || state.links.some((link, i) => link.target !== targets[i] || typeof link.source !== 'string' || !path.isAbsolute(link.source))
         || (platform.id === 'kiro' && (state.agent?.path !== agentPath || typeof state.agent.sha256 !== 'string'))) {
         throw new Error(`安装记录损坏或来自旧版本，请先用旧安装器卸载：${statePath}`);
       }
     }
     const existing = targets.map(stat);
-    targets.forEach((file, i) => {
-      if (existing[i] && (!state || !existing[i].isSymbolicLink() || linkTarget(file) !== state.links[i].source)) {
+    // 卸载只处理记录中登记过的入口。
+    const managed = options.uninstall && state ? targets.slice(0, state.links.length) : targets;
+    managed.forEach((file, i) => {
+      if (existing[i] && (!existing[i].isSymbolicLink() || linkTarget(file) !== state?.links[i]?.source)) {
         throw new Error(`拒绝覆盖或删除非本工具管理的入口：${file}`);
       }
     });
@@ -105,7 +108,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
       if (!state) { log('未登记安装，无需卸载。'); return; }
       log(`${options['dry-run'] ? '[dry-run] ' : ''}卸载 ${platform.id}：${target}`);
       if (options['dry-run']) return;
-      targets.forEach((_, i) => removeLink(i));
+      managed.forEach((_, i) => removeLink(i));
       removeAgent();
       fs.unlinkSync(statePath);
       undo.length = 0;
@@ -116,8 +119,8 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     const sources = names.map(name => fs.realpathSync(path.join(sourceRoot, 'skills', name)));
     const source = sources[0];
     const agent = `${JSON.stringify({
-      name: 'bridge', description: '使用 Bridge Skill 理解仓库并生成静态 HTML 报告。',
-      prompt: '使用 bridge 建立文件树，使用 explore 按主题探索调用关系；只向目标仓库 .bridge 写入分析产物。',
+      name: 'bridge', description: '使用 Bridge Skill 理解仓库，并围绕改动目标学习与审查。',
+      prompt: '使用 bridge 建立文件树，使用 explore 按主题探索调用关系，使用 course 按改动目标出课，使用 tutor 上课与批改；只向目标仓库 .bridge 写入分析产物，运行目标代码前征得用户同意。',
       tools: ['read', 'write', 'shell'],
       resources: targets.map(file => `skill://${path.join(file, 'SKILL.md').replaceAll('\\', '/')}`),
     }, null, 2)}\n`;
@@ -142,7 +145,7 @@ export function install(options, { home = os.homedir(), log = console.log } = {}
     fs.writeFileSync(temporary, `${JSON.stringify(next, null, 2)}\n`, { flag: 'wx' });
     fs.renameSync(temporary, statePath);
     undo.length = 0;
-    log('bridge 与 explore 安装完成；重启客户端后使用。');
+    log(`${names.join('、')} 安装完成；重启客户端后使用。`);
   } catch (error) {
     for (const rollback of undo.reverse()) {
       try { rollback(); } catch (rollbackError) { log(`回滚失败：${rollbackError.message}`); }

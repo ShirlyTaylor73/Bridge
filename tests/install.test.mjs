@@ -17,20 +17,21 @@ for (const platform of platforms.filter((item) => item.mode === 'skill-link')) {
     assert.ok(fs.lstatSync(target).isSymbolicLink());
     assert.equal(fs.realpathSync(target), fs.realpathSync(path.join(packageRoot, 'skills/bridge')));
     run(home, platform.id);
-    const explore = path.join(home, platform.directory, 'explore');
-    assert.ok(fs.lstatSync(explore).isSymbolicLink());
-    const skillRoot=fs.realpathSync(path.join(explore,'SKILL.md'));
-    assert.ok(fs.existsSync(path.resolve(path.dirname(skillRoot),'../../scripts/publish-exploration.mjs')));
+    const others = ['explore', 'course', 'tutor'].map(name => path.join(home, platform.directory, name));
+    for (const entry of others) assert.ok(fs.lstatSync(entry).isSymbolicLink());
+    for (const [name, resource] of [['explore', 'scripts/publish-exploration.mjs'], ['course', 'scripts/publish-course.mjs'], ['course', 'references/learning-design.md'], ['tutor', 'scripts/record-progress.mjs'], ['tutor', 'references/course-contract.md']]) {
+      const skillRoot = fs.realpathSync(path.join(home, platform.directory, name, 'SKILL.md'));
+      assert.ok(fs.existsSync(path.resolve(path.dirname(skillRoot), '../..', resource)), `${name}: ${resource}`);
+    }
     if (platform.id === 'kiro') {
       const agent = JSON.parse(fs.readFileSync(path.join(home, '.kiro/agents/bridge.json')));
       assert.equal(agent.name, 'bridge');
-      assert.ok(agent.resources[0].endsWith('/bridge/SKILL.md'));
-      assert.ok(agent.resources[1].endsWith('/explore/SKILL.md'));
+      assert.deepEqual(agent.resources.map(item => item.split('/').at(-2)), ['bridge', 'explore', 'course', 'tutor']);
     }
     run(home, platform.id, { uninstall: true });
     run(home, platform.id, { uninstall: true });
     assert.ok(!fs.existsSync(target));
-    assert.ok(!fs.existsSync(explore));
+    for (const entry of others) assert.ok(!fs.existsSync(entry));
     assert.ok(fs.existsSync(path.join(packageRoot, 'skills/bridge/SKILL.md')));
   });
 }
@@ -142,4 +143,33 @@ test('第二个 Skill 冲突时整组安装与卸载均保持原样', (t) => {
   assert.throws(() => run(home, 'opencode', { uninstall: true }), /拒绝/);
   assert.ok(fs.lstatSync(path.join(directory, 'bridge')).isSymbolicLink());
   assert.ok(fs.lstatSync(explore).isDirectory());
+});
+
+// 把当前安装还原成 0.2.0 的双入口记录。
+function downgrade(home, platform) {
+  const file = path.join(home, '.bridge/installations', `${platform}.json`);
+  const state = JSON.parse(fs.readFileSync(file));
+  for (const link of state.links.splice(2)) fs.unlinkSync(link.target);
+  fs.writeFileSync(file, JSON.stringify(state));
+}
+test('0.2.0 双入口记录可原地补齐四个入口，且不覆盖用户的同名目录', (t) => {
+  const home = temporary(t);
+  const directory = path.join(home, '.kiro/skills');
+  const entry = name => path.join(directory, name);
+  run(home, 'kiro');
+  downgrade(home, 'kiro');
+  fs.mkdirSync(entry('tutor'));
+  assert.throws(() => run(home, 'kiro'), /拒绝/);
+  assert.ok(!fs.existsSync(entry('course')));
+  run(home, 'kiro', { uninstall: true });
+  assert.ok(!fs.existsSync(entry('bridge')));
+  assert.ok(fs.lstatSync(entry('tutor')).isDirectory());
+  fs.rmdirSync(entry('tutor'));
+  run(home, 'kiro');
+  downgrade(home, 'kiro');
+  run(home, 'kiro');
+  for (const name of ['bridge', 'explore', 'course', 'tutor']) assert.ok(fs.lstatSync(entry(name)).isSymbolicLink());
+  assert.equal(JSON.parse(fs.readFileSync(path.join(home, '.bridge/installations/kiro.json'))).links.length, 4);
+  run(home, 'kiro', { uninstall: true });
+  for (const name of ['bridge', 'explore', 'course', 'tutor']) assert.ok(!fs.existsSync(entry(name)));
 });
