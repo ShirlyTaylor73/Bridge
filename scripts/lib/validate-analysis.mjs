@@ -17,6 +17,36 @@ function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+export function normalizeRelative(value) {
+  if (typeof value !== 'string' || !value.trim()) return '必须是非空字符串';
+  if (
+    value.includes('\0')
+    || value.includes('\\')
+    || path.posix.isAbsolute(value)
+    || path.win32.isAbsolute(value)
+    || /^[A-Za-z]:/.test(value)
+  ) return '必须是安全的 POSIX 相对路径';
+  const normalized = path.posix.normalize(value);
+  if (
+    normalized !== value
+    || normalized === '.'
+    || normalized === '..'
+    || normalized.startsWith('../')
+  ) return '路径未规范化或会逃逸项目根目录';
+  return null;
+}
+
+// 只读取仓库内的普通文件，拒绝链接与逃逸路径；返回统一为 LF 的文本。
+export function readSourceText(root, relativePath) {
+  const fullPath = path.resolve(root, ...relativePath.split('/'));
+  if (!fullPath.startsWith(`${root}${path.sep}`)) throw new Error('路径逃逸项目根目录');
+  const stat = fs.lstatSync(fullPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('不是普通文件或包含符号链接');
+  const realPath = fs.realpathSync(fullPath);
+  if (!realPath.startsWith(`${root}${path.sep}`)) throw new Error('真实路径逃逸项目根目录');
+  return fs.readFileSync(realPath, 'utf8').replace(/\r\n/g, '\n');
+}
+
 export function createValidator(root, { exploration = false } = {}) {
   const errors = [];
   const scanFiles = new Set();
@@ -67,25 +97,6 @@ export function createValidator(root, { exploration = false } = {}) {
       return null;
     }
     return value[key];
-  }
-
-  function normalizeRelative(value) {
-    if (typeof value !== 'string' || !value.trim()) return '必须是非空字符串';
-    if (
-      value.includes('\0')
-      || value.includes('\\')
-      || path.posix.isAbsolute(value)
-      || path.win32.isAbsolute(value)
-      || /^[A-Za-z]:/.test(value)
-    ) return '必须是安全的 POSIX 相对路径';
-    const normalized = path.posix.normalize(value);
-    if (
-      normalized !== value
-      || normalized === '.'
-      || normalized === '..'
-      || normalized.startsWith('../')
-    ) return '路径未规范化或会逃逸项目根目录';
-    return null;
   }
 
   function validateProject(value, location, isScan = false) {
@@ -308,13 +319,7 @@ export function createValidator(root, { exploration = false } = {}) {
       let source = cache.get(check.path);
       if (source === undefined) {
         try {
-          const fullPath = path.resolve(root, ...check.path.split('/'));
-          if (!fullPath.startsWith(`${root}${path.sep}`)) throw new Error('路径逃逸项目根目录');
-          const stat = fs.lstatSync(fullPath);
-          if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('不是普通文件或包含符号链接');
-          const realPath = fs.realpathSync(fullPath);
-          if (!realPath.startsWith(`${root}${path.sep}`)) throw new Error('真实路径逃逸项目根目录');
-          source = { text: fs.readFileSync(realPath, 'utf8').replace(/\r\n/g, '\n') };
+          source = { text: readSourceText(root, check.path) };
         } catch (error) {
           source = { error: error.message };
         }
