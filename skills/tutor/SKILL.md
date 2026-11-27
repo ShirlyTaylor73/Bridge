@@ -42,7 +42,7 @@ description: Teach and grade an already published Bridge course in conversation,
 
 全部课完成或跳过后，依次进行两题，同样适用提示阶梯与记录规则：
 
-1. `capstone.blueprint`（变更蓝图）：让用户描述目标改动会动哪些文件、接口与 shape，以及如何验证。
+1. `capstone.blueprint`（变更蓝图）：让用户描述目标改动会动哪些文件、接口与 shape，以及如何验证。提示和批改只依据本题的 hints 与 rubric，不提及审查题的风险点。
 2. `capstone.review`（审查演练）：完整展示模拟 diff，说明它不会应用到源码，让用户找出风险、给出位置与后果。批改时对照 `risks` 与 rubric。
 
 结业原文只保存**用户原话**：每题结束时用 `capstone` 事件分别写 `blueprint` 与 `reviewFindings`，多轮补充按顺序拼接完整，不改写、不混入你的提示或讲解。这些原文用于以后回填改动计划。

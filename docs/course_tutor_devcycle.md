@@ -4,7 +4,7 @@
 
 | 周期 | 范围 | 状态 |
 | --- | --- | --- |
-| C1 | `course` 与 `tutor` 两个 Skill：仓库目标驱动的“出课 → 对话答题 → 批改 → 结业”最小闭环 | 实施中，见 [C1 规格](course_tutor_spec.md) |
+| C1 | `course` 与 `tutor` 两个 Skill：仓库目标驱动的“出课 → 对话答题 → 批改 → 结业”最小闭环 | 已验收，见 [C1 规格](course_tutor_spec.md) 与 [验收记录](course_tutor_validation.md)；多文件 diff 待决 |
 | C2 | 资料库 | 未开始 |
 | C3 | Dashboard 课程视图 | 未开始 |
 | C4 | 开发流程编排 | 未开始 |
